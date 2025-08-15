@@ -16,7 +16,7 @@ module test_coin::coin_tests {
         // 測試創建代幣
         test_scenario::next_tx(&mut scenario, ADMIN);
         {
-            let coin = coin::create_coin(100, test_scenario::ctx(&mut scenario));
+            let coin = coin::create_coin(test_scenario::ctx(&mut scenario));
             
             // 驗證代幣價值
             assert!(coin::get_value(&coin) == 100, 0);
