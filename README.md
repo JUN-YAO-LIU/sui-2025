@@ -188,6 +188,63 @@ sui move test test_coin::coin_tests
 sui move test --save-results test_results.json
 ```
 
+### unit test
+
+first step : #[test], fun name must not began test words.
+
+verify, then return the bool and error status.
+assert!(coin::get_value(&coin) == 75, 2);
+status range is u64 type.
+
+consolelog:
+debug::print(&b"Hello World");
+
+**TxContext：**
+&mut TxContext 是參數類型（可變借用）
+
+1. `ctx: &TxContext` - **不可變借用**，只能讀取（唯讀）
+2. `ctx: &mut TxContext` - **可變借用**，可以修改內部值
+3. `ctx: TxContext` - 按值傳遞，取得完整擁有權
+
+TxContext 包含當前交易的完整資訊：
+- 交易發送者地址 (sender)
+- 交易唯一識別符 (transaction digest)
+- 當前 epoch 和時間戳
+- 已創建的物件計數器 (用於生成唯一 ID)
+
+```move
+// TxContext 內部結構 (簡化版)
+struct TxContext {
+    sender: address,           // 誰發起了這筆交易
+    tx_hash: vector<u8>,      // 交易的唯一哈希
+    epoch: u64,               // 當前 epoch
+    epoch_timestamp_ms: u64,  // 時間戳
+    ids_created: u64,         // 在此交易中已創建的物件數量
+}
+```
+
+**為什麼需要 TxContext？**
+1. **身份驗證** - 確定誰在執行操作
+2. **唯一 ID 生成** - 為新物件創建全球唯一識別符
+3. **防止重放攻擊** - 每個交易都有唯一上下文
+4. **權限控制** - 基於發送者地址進行授權
+
+
+test_scenario::next_tx, mimic who push the transaction.
+
+string:
+let message = string::utf8(b"USER1 balance:");
+std::debug::print(&string::utf8(b"text"));
+string::append(&mut message, value_str);
+
+entry：
+entry = 可以從外部交易直接調用的函數
+public = 可以被其他模組調用的函數
+public entry = 既可以被外部調用，也可以被其他模組調用
+
+fun init rule:
+modulename = winess Name bigcase
+
 ### Gas 機制和交易模型
 
 
