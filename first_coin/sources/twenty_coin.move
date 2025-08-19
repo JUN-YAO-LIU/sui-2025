@@ -20,11 +20,6 @@ public struct USDC_Vault has key {
     balance: Coin<USDC>
 }
 
-public struct GameParticipant has key, store {
-    id: UID,
-    player_address: address
-}
-
 // internal
 fun init(otw: TWENTY, ctx: &mut TxContext){
     let (treasury_cap, coin_metadata) = coin::create_currency(
@@ -57,14 +52,6 @@ fun init(otw: TWENTY, ctx: &mut TxContext){
     transfer::transfer(issuer_twenty, tx_context::sender(ctx));
 }
 
-public entry fun join_game(issuer: &mut ISSUER_TWENTY, ctx: &mut TxContext) {
-    let participant = GameParticipant {
-        id: object::new(ctx),
-        player_address: tx_context::sender(ctx)
-    };
-    transfer::transfer(participant, tx_context::sender(ctx));
-}
-
 // ctx reference isn't first place.
 public entry fun mint_twenty_token(
     cap: &mut TreasuryCap<TWENTY>,
@@ -84,16 +71,21 @@ public fun burn_twenty_token(
     coin::burn(treasury_cap, coin);
 }
 
-public entry fun deposit_usdc_in_vault(
+public fun deposit_usdc_in_vault(
     vault: &mut USDC_Vault,
     amount: Coin<USDC>,
-    recipient: address,
-    ctx: &mut TxContext) {
+    ctx: &mut TxContext): Coin<USDC> {
     coin::join(&mut vault.balance, amount);
+    coin::zero<USDC>(ctx)
 }
 
 public entry fun swap_twenty_to_usdc(
     cap: &mut TreasuryCap<TWENTY>,  
     amount: Coin<TWENTY>) {
     coin::burn(cap, amount);
+}
+
+ #[test_only]
+public fun test_for_init(ctx: &mut TxContext) {
+    init(TWENTY {}, ctx);
 }
