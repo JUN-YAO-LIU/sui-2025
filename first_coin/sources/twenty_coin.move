@@ -7,7 +7,6 @@ use sui::transfer;
 use sui::sui::SUI;
 
 use usdc::usdc::USDC;
-use sui::balance;
 
 // 證人物件，用於 init 函式
 public struct TWENTY has drop {}
@@ -86,11 +85,15 @@ public fun burn_twenty_token(
 }
 
 public entry fun deposit_usdc_in_vault(
-        amount: u64,
-        recipient: address,
-        ctx: &mut TxContext) {
+    vault: &mut USDC_Vault,
+    amount: Coin<USDC>,
+    recipient: address,
+    ctx: &mut TxContext) {
+    coin::join(&mut vault.balance, amount);
 }
 
-public entry fun swap_twenty_to_usdc(amount: u64, ctx: &mut TxContext) {
-    
+public entry fun swap_twenty_to_usdc(
+    cap: &mut TreasuryCap<TWENTY>,  
+    amount: Coin<TWENTY>) {
+    coin::burn(cap, amount);
 }
