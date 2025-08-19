@@ -84,25 +84,8 @@ public fun burn_twenty_token(
    coin::burn(treasury_cap, coin);
 }
 
-public entry fun deposit_usdc_in_vault(
-    vault: &mut USDC_Vault, 
-    usdc_to_deposit: Coin<USDC>, 
-    ctx: &mut TxContext) {
-        
-    let balance = vault.balance;
-    vault.balance = balance + usdc_to_deposit.value();
-
-    let new_vault = USDC_Vault {
-        id: object::new(ctx),
-        balance: vault.balance
-    };
-
-    transfer::transfer(new_vault, tx_context::sender(ctx));
+public entry fun deposit_usdc_in_vault() {
 }
 
-public entry fun swap_twenty_to_usdc(
-    twenty: Coin<TWENTY>,
-    ctx: &mut TxContext) {
-    // let usdc = coin::swap(twenty, ctx);
-    // coin::transfer(usdc, tx_context::sender(ctx), ctx);
+public entry fun swap_twenty_to_usdc() {
 }
