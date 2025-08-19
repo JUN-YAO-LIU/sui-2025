@@ -4,8 +4,10 @@ use sui::object::{Self, UID};
 use sui::tx_context::{Self, TxContext};
 use sui::coin::{Self, Coin, TreasuryCap};
 use sui::transfer;
+use sui::sui::SUI;
 
 use usdc::usdc::USDC;
+use sui::balance;
 
 // 證人物件，用於 init 函式
 public struct TWENTY has drop {}
@@ -14,9 +16,9 @@ public struct ISSUER_TWENTY has key, store {
     id: UID
 }
 
-public struct USDC_Vault has key, store {
+public struct USDC_Vault has key {
     id: UID,
-    balance: u64  // Simplified to use u64 instead of Coin<USDC>
+    balance: Coin<USDC>
 }
 
 public struct GameParticipant has key, store {
@@ -44,9 +46,9 @@ fun init(otw: TWENTY, ctx: &mut TxContext){
 
     let usdc_vault = USDC_Vault {
         id: object::new(ctx),
-        balance: 0
+        balance: coin::zero<USDC>(ctx)
     };
-    
+
     transfer::transfer(usdc_vault, tx_context::sender(ctx));
 
     let issuer_twenty = ISSUER_TWENTY {
@@ -64,7 +66,6 @@ public entry fun join_game(issuer: &mut ISSUER_TWENTY, ctx: &mut TxContext) {
     transfer::transfer(participant, tx_context::sender(ctx));
 }
 
-
 // ctx reference isn't first place.
 public entry fun mint_twenty_token(
     cap: &mut TreasuryCap<TWENTY>,
@@ -81,11 +82,15 @@ public fun burn_twenty_token(
     amount: u64,
     ctx: &mut TxContext) {
 
-   coin::burn(treasury_cap, coin);
+    coin::burn(treasury_cap, coin);
 }
 
-public entry fun deposit_usdc_in_vault() {
+public entry fun deposit_usdc_in_vault(
+        amount: u64,
+        recipient: address,
+        ctx: &mut TxContext) {
 }
 
-public entry fun swap_twenty_to_usdc() {
+public entry fun swap_twenty_to_usdc(amount: u64, ctx: &mut TxContext) {
+    
 }
