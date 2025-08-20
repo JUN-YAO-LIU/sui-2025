@@ -79,13 +79,39 @@ public fun deposit_usdc_in_vault(
     coin::zero<USDC>(ctx)
 }
 
+
 public entry fun swap_twenty_to_usdc(
-    cap: &mut TreasuryCap<TWENTY>,  
-    amount: Coin<TWENTY>) {
-    coin::burn(cap, amount);
+    cap: &mut TreasuryCap<TWENTY>, 
+    vault: &mut USDC_Vault, 
+    mut payment: Coin<TWENTY>,  // 用戶傳入的 TWENTY 代幣
+    twenty_amount: u64,         // 要兌換的數量
+    recipient: address,
+    ctx: &mut TxContext) {
+    
+    // 從用戶的代幣中分離出指定數量
+    let twenty_to_burn = coin::split(&mut payment, twenty_amount, ctx);
+    
+    // 把剩餘的代幣還給用戶
+    if (coin::value(&payment) > 0) {
+        transfer::public_transfer(payment, tx_context::sender(ctx));
+    } else {
+        coin::destroy_zero(payment);
+    };
+    
+    // 計算可換取的 USDC 數量
+    let usdc_value = twenty_amount / 10000;
+    
+    // 銷毀指定數量的 TWENTY
+    coin::burn(cap, twenty_to_burn);
+    
+    // 從 vault 中取出 USDC
+    let usdc_coin = coin::split(&mut vault.balance, usdc_value, ctx);
+    
+    // 轉給接收者
+    transfer::public_transfer(usdc_coin, recipient);
 }
 
- #[test_only]
+#[test_only]
 public fun test_for_init(ctx: &mut TxContext) {
     init(TWENTY {}, ctx);
 }

@@ -136,14 +136,24 @@ module TWENTY_PACKAGE::twenty_coin_tests {
         {
             // a. 從場景中取出 TreasuryCap
             let mut vault = ts::take_from_sender<USDC_Vault>(&scenario);
-            let mut usdc = ts::take_from_sender<Coin<USDC>>(&scenario);
+            // let mut usdc = ts::take_from_sender<Coin<USDC>>(&scenario);
+
+             // 直接創建測試用的 USDC 代幣
+            let usdc_coin = coin::mint_for_testing<USDC>(500000, ts::ctx(&mut scenario));
 
             // b. 呼叫鑄幣函式，為 ADMIN 自己鑄造 100 個代幣
-            usdc = deposit_usdc_in_vault(&mut vault, usdc,ts::ctx(&mut scenario));
+            let remaining_usdc = deposit_usdc_in_vault(&mut vault, usdc_coin, ts::ctx(&mut scenario));
 
             // c. 將 TreasuryCap 物件歸還給場景
             ts::return_to_sender(&scenario, vault);
-            ts::return_to_sender(&scenario, usdc);
+            // ts::return_to_sender(&scenario, usdc);
+
+            // 處理剩餘代幣
+            if (coin::value(&remaining_usdc) > 0) {
+                transfer::public_transfer(remaining_usdc, ADMIN);
+            } else {
+                coin::destroy_zero(remaining_usdc);
+            }
         };
 
         // 結束場景
@@ -156,42 +166,98 @@ module TWENTY_PACKAGE::twenty_coin_tests {
         let mut scenario = ts::begin(ADMIN);
 
         // --- 交易 1: ADMIN 發布 `twenty` 模組並獲取 TreasuryCap ---
-        // 這是「創世」或「設定」交易
         ts::next_tx(&mut scenario, ADMIN);
         {
             // 呼叫初始化函式，這會創建 TreasuryCap<TWENTY> 並發送給 ADMIN
             test_for_init(ts::ctx(&mut scenario));
         };
 
+        // --- 交易 2: 創建 USDC Vault 並添加一些 USDC ---
         ts::next_tx(&mut scenario, ADMIN);
         {
+            // 假設你有創建 USDC vault 的函數
+            // create_usdc_vault_with_balance(1000000, ts::ctx(&mut scenario)); // 添加足夠的USDC
+
             // a. 從場景中取出 TreasuryCap
+            let mut vault = ts::take_from_sender<USDC_Vault>(&scenario);
+            // let mut usdc = ts::take_from_sender<Coin<USDC>>(&scenario);
+
+             // 直接創建測試用的 USDC 代幣
+            let usdc_coin = coin::mint_for_testing<USDC>(10000, ts::ctx(&mut scenario));
+
+            // b. 呼叫鑄幣函式，為 ADMIN 自己鑄造 100 個代幣
+            let remaining_usdc = deposit_usdc_in_vault(&mut vault, usdc_coin, ts::ctx(&mut scenario));
+
+            // c. 將 TreasuryCap 物件歸還給場景
+            ts::return_to_sender(&scenario, vault);
+
+            // 處理剩餘代幣
+            if (coin::value(&remaining_usdc) > 0) {
+                transfer::public_transfer(remaining_usdc, ADMIN);
+            } else {
+                coin::destroy_zero(remaining_usdc);
+            }
+        };
+
+        // --- 交易 3: 為 USER1 鑄造 TWENTY 代幣 ---
+        ts::next_tx(&mut scenario, ADMIN);
+        {
             let mut treasury_cap = ts::take_from_sender<TreasuryCap<TWENTY>>(&scenario);
             
-            // b. 呼叫鑄幣函式，為 ADMIN 自己鑄造 100 個代幣
-            mint_twenty_token(&mut treasury_cap, 100, ADMIN, ts::ctx(&mut scenario));
+            // 為 USER1 鑄造 10000 個 TWENTY 代幣
+            mint_twenty_token(&mut treasury_cap, 10000 * 9000, USER1, ts::ctx(&mut scenario));
 
-            // c. 將 TreasuryCap 物件歸還給場景
             ts::return_to_sender(&scenario, treasury_cap);
         };
 
-        ts::next_tx(&mut scenario, ADMIN);
+        // --- 交易 4: USER1 執行兌換 ---
+        ts::next_tx(&mut scenario, USER1);
         {
-            // a. 從場景中取出 TreasuryCap
-            let mut treasury_cap = ts::take_from_sender<TreasuryCap<TWENTY>>(&scenario);
-            let mut coin = ts::take_from_sender<Coin<TWENTY>>(&scenario);
+            let mut treasury_cap = ts::take_from_address<TreasuryCap<TWENTY>>(&scenario, ADMIN);
+            let mut vault = ts::take_from_address<USDC_Vault>(&scenario, ADMIN);
+            let twenty_coin = ts::take_from_sender<Coin<TWENTY>>(&scenario);
 
-            let burn_part = coin::split(&mut coin, 60, ts::ctx(&mut scenario));
+            // 兌換 1000 個 TWENTY (應該得到 0.1 個 USDC)
+            swap_twenty_to_usdc(
+                &mut treasury_cap, 
+                &mut vault, 
+                twenty_coin,           // 傳入整個 coin 對象（會被函數消耗）
+                10000 * 9000,                  // 要兌換的數量
+                USER1,                 // 接收者
+                ts::ctx(&mut scenario)
+            );
 
-            // b. 呼叫鑄幣函式，為 ADMIN 自己鑄造 100 個代幣
-            swap_twenty_to_usdc(&mut treasury_cap, burn_part);
-
-            // c. 將 TreasuryCap 物件歸還給場景
-            ts::return_to_sender(&scenario, treasury_cap);
-            ts::return_to_sender(&scenario, coin);
+            // 歸還沒有被消耗的對象
+            ts::return_to_address(ADMIN, treasury_cap);
+            ts::return_to_address(ADMIN, vault);
         };
-       
-        // 結束場景
+
+        // --- 交易 5: 驗證結果 ---
+        ts::next_tx(&mut scenario, USER1);
+        {
+            // 檢查 USER1 是否收到了正確數量的 USDC
+            let usdc_coin = ts::take_from_sender<Coin<USDC>>(&scenario);
+            let usdc_balance = coin::value(&usdc_coin);
+
+            // 1000 TWENTY = 0.1 USDC = 100 (假設 USDC 有 3 位小數)
+            assert!(usdc_balance == 9000, 0); // 根據你的 USDC 小數位數調整
+            
+            ts::return_to_sender(&scenario, usdc_coin);
+            
+            // 檢查是否還有剩餘的 TWENTY
+            if (ts::has_most_recent_for_sender<Coin<TWENTY>>(&scenario)) {
+                let remaining_twenty = ts::take_from_sender<Coin<TWENTY>>(&scenario);
+                let remaining_balance = coin::value(&remaining_twenty);
+                
+                std::debug::print(&remaining_balance);
+
+                // 應該剩下 9000 個 TWENTY (10000 - 1000)
+                assert!(remaining_balance == 0, 1);
+                
+                ts::return_to_sender(&scenario, remaining_twenty);
+            };
+        };
+    
         ts::end(scenario);
     }
 }
