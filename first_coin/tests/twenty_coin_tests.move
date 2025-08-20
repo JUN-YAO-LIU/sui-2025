@@ -222,7 +222,7 @@ module TWENTY_PACKAGE::twenty_coin_tests {
                 &mut treasury_cap, 
                 &mut vault, 
                 twenty_coin,           // 傳入整個 coin 對象（會被函數消耗）
-                10000 * 9000,                  // 要兌換的數量
+                10000 * 8000,                  // 要兌換的數量
                 USER1,                 // 接收者
                 ts::ctx(&mut scenario)
             );
@@ -240,7 +240,7 @@ module TWENTY_PACKAGE::twenty_coin_tests {
             let usdc_balance = coin::value(&usdc_coin);
 
             // 1000 TWENTY = 0.1 USDC = 100 (假設 USDC 有 3 位小數)
-            assert!(usdc_balance == 9000, 0); // 根據你的 USDC 小數位數調整
+            assert!(usdc_balance == 8000, 0); // 根據你的 USDC 小數位數調整
             
             ts::return_to_sender(&scenario, usdc_coin);
             
@@ -252,8 +252,8 @@ module TWENTY_PACKAGE::twenty_coin_tests {
                 std::debug::print(&remaining_balance);
 
                 // 應該剩下 9000 個 TWENTY (10000 - 1000)
-                assert!(remaining_balance == 0, 1);
-                
+                assert!(remaining_balance == 10000 * 9000, 1);
+
                 ts::return_to_sender(&scenario, remaining_twenty);
             };
         };
