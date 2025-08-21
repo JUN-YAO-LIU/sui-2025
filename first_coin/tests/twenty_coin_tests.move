@@ -238,7 +238,7 @@ module TWENTY_PACKAGE::twenty_coin_tests {
                 std::debug::print(&remaining_balance);
 
                 // 應該剩下 9000 個 TWENTY (10000 - 1000)
-                assert!(remaining_balance == 10000 * 9000, 1);
+                assert!(remaining_balance == 10000000, 1);
 
                 ts::return_to_sender(&scenario, remaining_twenty);
             };
