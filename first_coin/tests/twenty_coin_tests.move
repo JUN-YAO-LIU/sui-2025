@@ -142,18 +142,11 @@ module TWENTY_PACKAGE::twenty_coin_tests {
             let usdc_coin = coin::mint_for_testing<USDC>(500000, ts::ctx(&mut scenario));
 
             // b. 呼叫鑄幣函式，為 ADMIN 自己鑄造 100 個代幣
-            let remaining_usdc = deposit_usdc_in_vault(&mut vault, usdc_coin, ts::ctx(&mut scenario));
+            deposit_usdc_in_vault(&mut vault, usdc_coin, ts::ctx(&mut scenario));
 
             // c. 將 TreasuryCap 物件歸還給場景
             ts::return_to_sender(&scenario, vault);
             // ts::return_to_sender(&scenario, usdc);
-
-            // 處理剩餘代幣
-            if (coin::value(&remaining_usdc) > 0) {
-                transfer::public_transfer(remaining_usdc, ADMIN);
-            } else {
-                coin::destroy_zero(remaining_usdc);
-            }
         };
 
         // 結束場景
@@ -186,17 +179,10 @@ module TWENTY_PACKAGE::twenty_coin_tests {
             let usdc_coin = coin::mint_for_testing<USDC>(10000, ts::ctx(&mut scenario));
 
             // b. 呼叫鑄幣函式，為 ADMIN 自己鑄造 100 個代幣
-            let remaining_usdc = deposit_usdc_in_vault(&mut vault, usdc_coin, ts::ctx(&mut scenario));
+            deposit_usdc_in_vault(&mut vault, usdc_coin, ts::ctx(&mut scenario));
 
             // c. 將 TreasuryCap 物件歸還給場景
             ts::return_to_sender(&scenario, vault);
-
-            // 處理剩餘代幣
-            if (coin::value(&remaining_usdc) > 0) {
-                transfer::public_transfer(remaining_usdc, ADMIN);
-            } else {
-                coin::destroy_zero(remaining_usdc);
-            }
         };
 
         // --- 交易 3: 為 USER1 鑄造 TWENTY 代幣 ---

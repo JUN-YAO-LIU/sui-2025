@@ -242,11 +242,20 @@ entry = 可以從外部交易直接調用的函數
 public = 可以被其他模組調用的函數
 public entry = 既可以被外部調用，也可以被其他模組調用
 
+有entry 會不能回大部分的物件。包括常見的coin。
+
 fun init rule:
 modulename = winess Name bigcase
 
 ### Gas 機制和交易模型
 
+## instruction
+
+sui client active-address
+
+sui client active-env
+
+sui client publish
 
 ## 創建第一個 Sui 項目
 

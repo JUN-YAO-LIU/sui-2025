@@ -62,7 +62,7 @@ public entry fun mint_twenty_token(
     coin::mint_and_transfer(cap, amount, recipient, ctx);
 }
 
-public fun burn_twenty_token(
+public entry fun burn_twenty_token(
     treasury_cap: &mut TreasuryCap<TWENTY>, 
     coin: Coin<TWENTY>,
     amount: u64,
@@ -71,12 +71,11 @@ public fun burn_twenty_token(
     coin::burn(treasury_cap, coin);
 }
 
-public fun deposit_usdc_in_vault(
+public entry fun deposit_usdc_in_vault(
     vault: &mut USDC_Vault,
     amount: Coin<USDC>,
-    ctx: &mut TxContext): Coin<USDC> {
-    coin::join(&mut vault.balance, amount);
-    coin::zero<USDC>(ctx)
+    ctx: &mut TxContext) {
+    coin::join(&mut vault.balance,  amount);
 }
 
 
