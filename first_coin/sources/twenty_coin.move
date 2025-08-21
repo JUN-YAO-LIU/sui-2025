@@ -78,7 +78,6 @@ public entry fun deposit_usdc_in_vault(
     coin::join(&mut vault.balance,  amount);
 }
 
-
 public entry fun swap_twenty_to_usdc(
     cap: &mut TreasuryCap<TWENTY>, 
     vault: &mut USDC_Vault, 

@@ -1,3 +1,5 @@
+address = 0x361ff5d1ee306da3692f0a55c57ff27cff73d1d39ff7b783f2146400a822ee0e
+
 PackageID = 0xed0ece3cae9266c11090a5e6e4dac9efd5bdedeebc65245e5844919743f81598
 
 USDC_Vault = 0x27b285a6ab60a34f28f12f6ab091a1181c22970d371b3ed0eb654e971c3a4fd5
@@ -17,4 +19,24 @@ USDC = 0x637643192ee7f74640702b4deaf5c18ede94ad7157ea5e0414544a8505ee3c3d
 
 ObjectType 要先存。
 
+**Successfully**
 sui client call --package 0xed0ece3cae9266c11090a5e6e4dac9efd5bdedeebc65245e5844919743f81598 --module twenty --function deposit_usdc_in_vault --args 0x27b285a6ab60a34f28f12f6ab091a1181c22970d371b3ed0eb654e971c3a4fd5 0x637643192ee7f74640702b4deaf5c18ede94ad7157ea5e0414544a8505ee3c3d --gas-budget 10000000
+
+
+## CURL
+
+curl --location --request POST 'https://fullnode.mainnet.sui.io:443' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "sui_executeTransactionBlock",
+    "params": [
+        "您的交易位元組",
+        ["您的簽名"],
+        {
+            "showEffects": true
+        }
+    ]
+}'
+AAiMM8YC+zWDasWTGPk8JQCFNz4vVoSrp1tJjYhso3t0
