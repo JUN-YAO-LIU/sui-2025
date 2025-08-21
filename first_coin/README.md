@@ -12,6 +12,9 @@ ISSUER_TWENTY = 0xe6ccd7a3757ec4149a420249d915be8f87bf72ad0a9cd0350e7f36dbb0a3de
 
 SUI = 0x38d9ea911f59067f77ebf9b25214e0752053083825305fb170a416d948c2a6b6
 
+不是packageID。是你錢包獲得的objectID。
+USDC = 0x637643192ee7f74640702b4deaf5c18ede94ad7157ea5e0414544a8505ee3c3d
+
 ObjectType 要先存。
 
-
+sui client call --package 0xed0ece3cae9266c11090a5e6e4dac9efd5bdedeebc65245e5844919743f81598 --module twenty --function deposit_usdc_in_vault --args 0x27b285a6ab60a34f28f12f6ab091a1181c22970d371b3ed0eb654e971c3a4fd5 0x637643192ee7f74640702b4deaf5c18ede94ad7157ea5e0414544a8505ee3c3d --gas-budget 10000000

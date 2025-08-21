@@ -257,6 +257,19 @@ sui client active-env
 
 sui client publish
 
+sui client call --gas-budget 10000000 --package 0x... --module my_nft --function mint
+
+public entry fun update_info(
+    info_object: &mut Info, 
+    new_name: vector<u8>, 
+    is_active: bool
+) { /* ... */ }
+
+sui client call \
+    --function update_info \
+    --args 0x1111...1111 "My New Name" true \
+    --gas-budget 10000000
+
 ## 創建第一個 Sui 項目
 
 ### 初始化項目結構
