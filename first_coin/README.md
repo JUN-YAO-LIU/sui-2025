@@ -40,3 +40,28 @@ curl --location --request POST 'https://fullnode.mainnet.sui.io:443' \
     ]
 }'
 AAiMM8YC+zWDasWTGPk8JQCFNz4vVoSrp1tJjYhso3t0
+
+
+## MAC
+
+address = 0x3f58a419f88a0b054daebff43c2a759a7a390a6f749cfc991793134cf6a89e21
+
+PackageID = 0x9e4d7104760cf8a880d0d9e8743e202873fa6518656b1f8040bca8babbc435cc
+
+USDC_Vault = 0xf088808578a76594cc2f4caf77f33cc84b40061b959ac1fd777817cdff310f7e
+
+UpgradeCap = 0x3c978190312d78e0a94ba34259c157c41d13c24295f2221ec041f5f37e777fdf
+
+TreasuryCap<TWENTY> = 0xc0f58a49c7d692e318672949eaac953ca7113336d352617aa5d4703f79f3d7cf
+
+CoinMetadata = 0x83cba87d43a6285e85ffe5ba46f22d44683af6444826255ec414d9dea25ad114
+
+ISSUER_TWENTY = 0x0e6f377764f101f4207445086e709ac59631b0ea89219c97c3790eb2f595fa1b
+
+SUI = 0x38d9ea911f59067f77ebf9b25214e0752053083825305fb170a416d948c2a6b6
+
+不是packageID。是你錢包獲得的objectID。
+USDC = 0x637643192ee7f74640702b4deaf5c18ede94ad7157ea5e0414544a8505ee3c3d
+
+
+sui keytool export --key-identity 0x3f58a419f88a0b054daebff43c2a759a7a390a6f749cfc991793134cf6a89e21 > my_sui_private_key.txt

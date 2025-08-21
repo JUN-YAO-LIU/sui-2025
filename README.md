@@ -270,10 +270,10 @@ sui client call \
     --args 0x1111...1111 "My New Name" true \
     --gas-budget 10000000
 
-## 創建第一個 Sui 項目
+## MAC
 
-### 初始化項目結構
+sui keytool convert PRIVATE_KEY suiprivkey1qqvakcmwlmjv48gm5vycjkah8f8xxecmka5tgyh6h57yzr4r9v9cck705rf --format bech32 --output-format base64
 
-### 了解 Move.toml 配置
+sui keytool convert PRIVATE_KEY 0x1234... --format hex --output-format bech32
 
-### 基本的項目組織
+sui keytool export --key-identity 0x3f58a419f88a0b054daebff43c2a759a7a390a6f749cfc991793134cf6a89e21
