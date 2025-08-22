@@ -34,7 +34,7 @@ module TWENTY_PACKAGE::twenty_coin_tests {
             let mut treasury_cap = ts::take_from_sender<TreasuryCap<TWENTY>>(&scenario);
             
             // b. 呼叫鑄幣函式，為 ADMIN 自己鑄造 100 個代幣
-            mint_twenty_token(&mut treasury_cap, 100, ADMIN, ts::ctx(&mut scenario));
+            mint_twenty_token(&mut treasury_cap, 100, USER2, ts::ctx(&mut scenario));
 
             // c. 將 TreasuryCap 物件歸還給場景
             ts::return_to_sender(&scenario, treasury_cap);
@@ -42,7 +42,7 @@ module TWENTY_PACKAGE::twenty_coin_tests {
 
         // --- 交易 3: ADMIN 驗證自己是否收到了正確數量的代幣 ---
         // 這是「驗證結果」的交易
-        ts::next_tx(&mut scenario, ADMIN);
+        ts::next_tx(&mut scenario, USER2);
         {
             // a. 從 ADMIN 的持有物中取出剛剛鑄造的 Coin<TWENTY>
             let coin = ts::take_from_sender<Coin<TWENTY>>(&scenario);
