@@ -15,9 +15,10 @@ public struct ISSUER_TWENTY has key, store {
     id: UID
 }
 
-public struct USDC_Vault has key {
+public struct USDC_Vault has key, store {
     id: UID,
-    balance: Coin<USDC>
+    balance: Coin<USDC>,
+    twenty_balance: Coin<TWENTY>
 }
 
 // internal
@@ -33,6 +34,7 @@ fun init(otw: TWENTY, ctx: &mut TxContext){
     );
 
     // 鑄幣權限給部署者
+    // Invalid usage of previously moved variable 'treasury_cap
     transfer::public_transfer(treasury_cap, tx_context::sender(ctx));
     
     // 元數據設為共享對象
@@ -40,10 +42,11 @@ fun init(otw: TWENTY, ctx: &mut TxContext){
 
     let usdc_vault = USDC_Vault {
         id: object::new(ctx),
-        balance: coin::zero<USDC>(ctx)
+        balance: coin::zero<USDC>(ctx),
+        twenty_balance: coin::zero<TWENTY>(ctx)
     };
 
-    transfer::transfer(usdc_vault, tx_context::sender(ctx));
+    transfer::public_share_object(usdc_vault);
 
     let issuer_twenty = ISSUER_TWENTY {
         id: object::new(ctx)
@@ -79,9 +82,8 @@ public entry fun deposit_usdc_in_vault(
 }
 
 public entry fun swap_twenty_to_usdc(
-    cap: &mut TreasuryCap<TWENTY>, 
+    mut payment: Coin<TWENTY>, // 用戶傳入的 TWENTY 代幣
     vault: &mut USDC_Vault, 
-    mut payment: Coin<TWENTY>,  // 用戶傳入的 TWENTY 代幣
     twenty_amount: u64,         // 要兌換的數量
     recipient: address,
     ctx: &mut TxContext) {
@@ -98,10 +100,9 @@ public entry fun swap_twenty_to_usdc(
     
     // 計算可換取的 USDC 數量
     let usdc_value = twenty_amount / 10000;
-    
-    // 銷毀指定數量的 TWENTY
-    coin::burn(cap, twenty_to_burn);
-    
+
+    coin::join(&mut vault.twenty_balance,  twenty_to_burn);
+
     // 從 vault 中取出 USDC
     let usdc_coin = coin::split(&mut vault.balance, usdc_value, ctx);
     

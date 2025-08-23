@@ -135,7 +135,7 @@ module TWENTY_PACKAGE::twenty_coin_tests {
         ts::next_tx(&mut scenario, ADMIN);
         {
             // a. 從場景中取出 TreasuryCap
-            let mut vault = ts::take_from_sender<USDC_Vault>(&scenario);
+            let mut vault = ts::take_shared<USDC_Vault>(&scenario);
             // let mut usdc = ts::take_from_sender<Coin<USDC>>(&scenario);
 
              // 直接創建測試用的 USDC 代幣
@@ -145,7 +145,7 @@ module TWENTY_PACKAGE::twenty_coin_tests {
             deposit_usdc_in_vault(&mut vault, usdc_coin, ts::ctx(&mut scenario));
 
             // c. 將 TreasuryCap 物件歸還給場景
-            ts::return_to_sender(&scenario, vault);
+            ts::return_shared(vault);
             // ts::return_to_sender(&scenario, usdc);
         };
 
@@ -172,7 +172,7 @@ module TWENTY_PACKAGE::twenty_coin_tests {
             // create_usdc_vault_with_balance(1000000, ts::ctx(&mut scenario)); // 添加足夠的USDC
 
             // a. 從場景中取出 TreasuryCap
-            let mut vault = ts::take_from_sender<USDC_Vault>(&scenario);
+            let mut vault = ts::take_shared<USDC_Vault>(&scenario);
             // let mut usdc = ts::take_from_sender<Coin<USDC>>(&scenario);
 
              // 直接創建測試用的 USDC 代幣
@@ -182,7 +182,7 @@ module TWENTY_PACKAGE::twenty_coin_tests {
             deposit_usdc_in_vault(&mut vault, usdc_coin, ts::ctx(&mut scenario));
 
             // c. 將 TreasuryCap 物件歸還給場景
-            ts::return_to_sender(&scenario, vault);
+            ts::return_shared(vault);
         };
 
         // --- 交易 3: 為 USER1 鑄造 TWENTY 代幣 ---
@@ -200,14 +200,13 @@ module TWENTY_PACKAGE::twenty_coin_tests {
         ts::next_tx(&mut scenario, USER1);
         {
             let mut treasury_cap = ts::take_from_address<TreasuryCap<TWENTY>>(&scenario, ADMIN);
-            let mut vault = ts::take_from_address<USDC_Vault>(&scenario, ADMIN);
+            let mut vault = ts::take_shared<USDC_Vault>(&scenario);
             let twenty_coin = ts::take_from_sender<Coin<TWENTY>>(&scenario);
 
             // 兌換 1000 個 TWENTY (應該得到 0.1 個 USDC)
             swap_twenty_to_usdc(
-                &mut treasury_cap, 
-                &mut vault, 
                 twenty_coin,           // 傳入整個 coin 對象（會被函數消耗）
+                &mut vault, 
                 10000 * 8000,                  // 要兌換的數量
                 USER1,                 // 接收者
                 ts::ctx(&mut scenario)
@@ -215,7 +214,7 @@ module TWENTY_PACKAGE::twenty_coin_tests {
 
             // 歸還沒有被消耗的對象
             ts::return_to_address(ADMIN, treasury_cap);
-            ts::return_to_address(ADMIN, vault);
+            ts::return_shared(vault);
         };
 
         // --- 交易 5: 驗證結果 ---
