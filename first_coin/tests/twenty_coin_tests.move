@@ -154,6 +154,7 @@ module TWENTY_PACKAGE::twenty_coin_tests {
             mint_usdc_in_vault(&mut treasury_cap, &mut vault, ts::ctx(&mut scenario));
 
             // c. 將 TreasuryCap 物件歸還給場景
+            ts::return_to_sender(&scenario, treasury_cap);
             ts::return_to_sender(&scenario, vault);
         };
 

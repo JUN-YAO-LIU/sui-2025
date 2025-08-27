@@ -114,9 +114,8 @@ public entry fun mint_usdc_in_vault(
     treasury_cap: &mut TreasuryCap<USDC>, 
     vault: &mut USDC_Vault,
     ctx: &mut TxContext){
-    let usdc = coin::mint(treasury_cap, 10000 * 1000000, ctx);
-    transfer::public_transfer(usdc, ctx.sender());
 
+    let usdc = coin::mint(treasury_cap, 10000 * 1000000, ctx);
     coin::join(&mut vault.balance,  usdc);
 }
 
