@@ -20,7 +20,7 @@ USDC = 0x637643192ee7f74640702b4deaf5c18ede94ad7157ea5e0414544a8505ee3c3d
 ObjectType 要先存。
 
 **Successfully**
-sui client call --package 0x23fd50c3c3bb7963558f84bbaf8fcb71c0d82b4cb718584bf2e3ab4da40fe18c --module twenty --function deposit_usdc_in_vault --args 0x32a0fdef603123cff085823500e62c1968dff383ec558120496e27d1eed6bbe4 0x78d1ce0f2fde9eaf1fc5cb8744a9c7bc6fe5e7c46a94f95b9ed57cb968b29f96 --gas-budget 10000000
+sui client call --package 0xf001416442c35c99ce1665ad2b5141ccd4eaaea191ff522932bba578e44dce8c --module twenty --function mint_usdc_in_vault --args 0xdb6c6f4741ec17a8318574d93dd5ca9aa1a0f135f6c25c9d11418544536b5cd9 0xbf1ecffe4d404a53eebdc396ae48f7361b7e362d6f42ddf04eb0c4fa370c7038 --gas-budget 10000000
 
 
 ## CURL
@@ -42,19 +42,23 @@ curl --location --request POST 'https://fullnode.mainnet.sui.io:443' \
 AAiMM8YC+zWDasWTGPk8JQCFNz4vVoSrp1tJjYhso3t0
 
 
-## MAC
+## MAC-dev
 
 address = 0x3f58a419f88a0b054daebff43c2a759a7a390a6f749cfc991793134cf6a89e21
 
-PackageID = 0x23fd50c3c3bb7963558f84bbaf8fcb71c0d82b4cb718584bf2e3ab4da40fe18c
+PackageID = 0xf001416442c35c99ce1665ad2b5141ccd4eaaea191ff522932bba578e44dce8c
 
-USDC_Vault = 0x32a0fdef603123cff085823500e62c1968dff383ec558120496e27d1eed6bbe4
+USDC_Vault = 0xbf1ecffe4d404a53eebdc396ae48f7361b7e362d6f42ddf04eb0c4fa370c7038
 
-UpgradeCap = 0x884dde3af0c31bfb72095d3d1abd8a6c465c827c5d929856f5716a40bf977165
+UpgradeCap = 0x2641d8dcf60e1245d6012eefd0b1d75d3c3c69207d7a82bb5e899704e4691890
 
-TreasuryCap<TWENTY> = 0x3d5c9b85c390744ebac963955f4f954fc5766bddab3991d0a12cacf3486555ed
+TreasuryCap<TWENTY> = 0x6123b7110b0c33e23e7dca7089abb9f740fe4224f9db7d94e8c108833c793a11
 
-CoinMetadata = 0x8ac55e9b92fb7b3b3f65201185e143a9a60e0fcfd7f2246afd5c794de2dcb861
+TreasuryCap<USDC> = 0xdb6c6f4741ec17a8318574d93dd5ca9aa1a0f135f6c25c9d11418544536b5cd9
+
+CoinMetadata = 0x39e3921ee35d39c9c69a5587a8f8b32cb6ff8430e01f4f14f83429ab780d2828
+
+CoinMetadata_usdc = 0x5cdfeaa11027e5a314dfa048a305b6f52528b636df7322dbff0918cd09c761e3
 
 ISSUER_TWENTY = 0x927f1d5175baff5475e448d09ebf811b839e8d8686426a0d2ff0f86c8e2314fc
 
@@ -73,9 +77,11 @@ sui keytool export --key-identity 0x3f58a419f88a0b054daebff43c2a759a7a390a6f749c
 
 zkUser private key = OIg8Z+KcwNAhr38EljriQeXsD5qpgWfIkDKdScQzTFs=
 
-
 QA:
 
 但是如果要做跟valut swap這件事情vault一定是 sponsor的吧
 所以你的意思是 在跟smart contract執行交易時，傳入的參數的擁有者都必須是sender的？
 那為什麼我單元測試會過？
+
+
+

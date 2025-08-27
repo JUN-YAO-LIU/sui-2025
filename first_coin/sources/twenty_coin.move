@@ -6,7 +6,7 @@ use sui::coin::{Self, Coin, TreasuryCap};
 use sui::transfer;
 use sui::sui::SUI;
 
-use usdc::usdc::USDC;
+use TWENTY_PACKAGE::usdc::USDC;
 
 // 證人物件，用於 init 函式
 public struct TWENTY has drop {}
@@ -108,6 +108,23 @@ public entry fun swap_twenty_to_usdc(
     
     // 轉給接收者
     transfer::public_transfer(usdc_coin, recipient);
+}
+
+public entry fun mint_usdc_in_vault(
+    treasury_cap: &mut TreasuryCap<USDC>, 
+    vault: &mut USDC_Vault,
+    ctx: &mut TxContext){
+
+    let usdc = coin::mint(treasury_cap, 1000000, ctx);
+    coin::join(&mut vault.balance,  usdc);
+}
+
+public fun get_usdc_balance(vault: &USDC_Vault): u64 {
+    coin::value(&vault.balance)
+}
+
+public fun get_twenty_balance(vault: &USDC_Vault): u64 {
+    coin::value(&vault.twenty_balance)
 }
 
 #[test_only]
