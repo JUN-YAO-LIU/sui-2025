@@ -4,8 +4,20 @@ module TWENTY_PACKAGE::twenty_coin_tests {
     use sui::object::UID;
     use sui::coin::{Self, Coin, TreasuryCap};
     use sui::sui::SUI;
-    use usdc::usdc::USDC;
-    use TWENTY_PACKAGE::twenty::{Self, TWENTY, ISSUER_TWENTY, USDC_Vault, test_for_init, mint_twenty_token, burn_twenty_token, deposit_usdc_in_vault, swap_twenty_to_usdc};
+    // use usdc::usdc::USDC;
+    use TWENTY_PACKAGE::usdc::USDC;
+    use TWENTY_PACKAGE::twenty::{
+        Self, 
+        TWENTY, 
+        ISSUER_TWENTY, 
+        USDC_Vault, 
+        test_for_init, 
+        mint_twenty_token, 
+        burn_twenty_token, 
+        deposit_usdc_in_vault, 
+        swap_twenty_to_usdc, 
+        mint_usdc_in_vault
+    };
     use sui::table;
 
     // 測試地址
@@ -115,6 +127,36 @@ module TWENTY_PACKAGE::twenty_coin_tests {
             ts::return_to_sender(&scenario, coin);
         };
         
+        // 結束場景
+        ts::end(scenario);
+    }
+
+    #[test]
+    public fun test_mint_usdc_in_vault(){
+        // 1. 初始化測試場景，設定 ADMIN 為創始使用者
+        let mut scenario = ts::begin(ADMIN);
+
+        // --- 交易 1: ADMIN 發布 `twenty` 模組並獲取 TreasuryCap ---
+        // 這是「創世」或「設定」交易
+        ts::next_tx(&mut scenario, ADMIN);
+        {
+            // 呼叫初始化函式，這會創建 TreasuryCap<TWENTY> 並發送給 ADMIN
+            test_for_init(ts::ctx(&mut scenario));
+        };
+
+         ts::next_tx(&mut scenario, ADMIN);
+        {
+            // a. 從場景中取出 TreasuryCap
+            let mut treasury_cap = ts::take_from_sender<TreasuryCap<USDC>>(&scenario);
+            let mut vault = ts::take_from_sender<USDC_Vault>(&scenario);
+
+            // b. 呼叫鑄幣函式，為 ADMIN 自己鑄造 100 個代幣
+            mint_usdc_in_vault(&mut treasury_cap, &mut vault, ts::ctx(&mut scenario));
+
+            // c. 將 TreasuryCap 物件歸還給場景
+            ts::return_to_sender(&scenario, vault);
+        };
+
         // 結束場景
         ts::end(scenario);
     }
