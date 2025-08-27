@@ -5,7 +5,7 @@ module TWENTY_PACKAGE::twenty_coin_tests {
     use sui::coin::{Self, Coin, TreasuryCap};
     use sui::sui::SUI;
     // use usdc::usdc::USDC;
-    use TWENTY_PACKAGE::usdc::USDC;
+    use TWENTY_PACKAGE::usdc::{Self, USDC, test_init_usdc};
     use TWENTY_PACKAGE::twenty::{
         Self, 
         TWENTY, 
@@ -142,20 +142,21 @@ module TWENTY_PACKAGE::twenty_coin_tests {
         {
             // 呼叫初始化函式，這會創建 TreasuryCap<TWENTY> 並發送給 ADMIN
             test_for_init(ts::ctx(&mut scenario));
+            test_init_usdc(ts::ctx(&mut scenario));
         };
 
          ts::next_tx(&mut scenario, ADMIN);
         {
             // a. 從場景中取出 TreasuryCap
             let mut treasury_cap = ts::take_from_sender<TreasuryCap<USDC>>(&scenario);
-            let mut vault = ts::take_from_sender<USDC_Vault>(&scenario);
+            let mut vault = ts::take_shared<USDC_Vault>(&scenario);
 
             // b. 呼叫鑄幣函式，為 ADMIN 自己鑄造 100 個代幣
             mint_usdc_in_vault(&mut treasury_cap, &mut vault, ts::ctx(&mut scenario));
 
             // c. 將 TreasuryCap 物件歸還給場景
             ts::return_to_sender(&scenario, treasury_cap);
-            ts::return_to_sender(&scenario, vault);
+            ts::return_shared(vault);
         };
 
         // 結束場景

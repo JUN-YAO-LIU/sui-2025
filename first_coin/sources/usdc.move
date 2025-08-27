@@ -29,6 +29,6 @@ fun init(witness: USDC, ctx: &mut TxContext) {
 }
 
 #[test_only]
-public fun test_init(ctx: &mut TxContext) {
+public fun test_init_usdc(ctx: &mut TxContext) {
     init(USDC {}, ctx);
 }
