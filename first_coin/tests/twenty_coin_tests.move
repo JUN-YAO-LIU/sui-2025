@@ -16,7 +16,8 @@ module TWENTY_PACKAGE::twenty_coin_tests {
         burn_twenty_token, 
         deposit_usdc_in_vault, 
         swap_twenty_to_usdc, 
-        mint_usdc_in_vault
+        mint_usdc_in_vault,
+        get_usdc_balance
     };
     use sui::table;
 
@@ -145,7 +146,7 @@ module TWENTY_PACKAGE::twenty_coin_tests {
             test_init_usdc(ts::ctx(&mut scenario));
         };
 
-         ts::next_tx(&mut scenario, ADMIN);
+        ts::next_tx(&mut scenario, ADMIN);
         {
             // a. 從場景中取出 TreasuryCap
             let mut treasury_cap = ts::take_from_sender<TreasuryCap<USDC>>(&scenario);
@@ -154,7 +155,11 @@ module TWENTY_PACKAGE::twenty_coin_tests {
             // b. 呼叫鑄幣函式，為 ADMIN 自己鑄造 100 個代幣
             mint_usdc_in_vault(&mut treasury_cap, &mut vault, ts::ctx(&mut scenario));
 
-            // c. 將 TreasuryCap 物件歸還給場景
+            // c. 驗證 USDC 餘額
+            let usdc_balance = get_usdc_balance(&vault);
+            assert!(usdc_balance == 1000000, 1);
+
+            // d. 將 TreasuryCap 物件歸還給場景
             ts::return_to_sender(&scenario, treasury_cap);
             ts::return_shared(vault);
         };

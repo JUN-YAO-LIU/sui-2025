@@ -115,8 +115,16 @@ public entry fun mint_usdc_in_vault(
     vault: &mut USDC_Vault,
     ctx: &mut TxContext){
 
-    let usdc = coin::mint(treasury_cap, 10000 * 1000000, ctx);
+    let usdc = coin::mint(treasury_cap, 1000000, ctx);
     coin::join(&mut vault.balance,  usdc);
+}
+
+public fun get_usdc_balance(vault: &USDC_Vault): u64 {
+    coin::value(&vault.balance)
+}
+
+public fun get_twenty_balance(vault: &USDC_Vault): u64 {
+    coin::value(&vault.twenty_balance)
 }
 
 #[test_only]
