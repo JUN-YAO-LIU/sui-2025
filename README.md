@@ -270,6 +270,10 @@ sui client call \
     --args 0x1111...1111 "My New Name" true \
     --gas-budget 10000000
 
+sui client new-env --alias devnet --rpc https://fullnode.devnet.sui.io:443
+
+sui client switch --env devnet
+
 ## MAC
 
 sui keytool convert PRIVATE_KEY suiprivkey1qqvakcmwlmjv48gm5vycjkah8f8xxecmka5tgyh6h57yzr4r9v9cck705rf --format bech32 --output-format base64
