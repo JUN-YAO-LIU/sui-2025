@@ -20,7 +20,7 @@ USDC = 0x637643192ee7f74640702b4deaf5c18ede94ad7157ea5e0414544a8505ee3c3d
 ObjectType 要先存。
 
 **Successfully**
-sui client call --package 0x459e01a382c9b0a2508c8ad30b0916102912332e120ba5dfc38f3991a612b429 --module twenty --function deposit_usdc_in_vault --args 0x6a55e6ba15c0d1f99aa82ecd05cc2fd285a14cacc16fe1fc281f9e631227ebec 0x78d1ce0f2fde9eaf1fc5cb8744a9c7bc6fe5e7c46a94f95b9ed57cb968b29f96 --gas-budget 10000000
+sui client call --package 0x23fd50c3c3bb7963558f84bbaf8fcb71c0d82b4cb718584bf2e3ab4da40fe18c --module twenty --function deposit_usdc_in_vault --args 0x32a0fdef603123cff085823500e62c1968dff383ec558120496e27d1eed6bbe4 0x78d1ce0f2fde9eaf1fc5cb8744a9c7bc6fe5e7c46a94f95b9ed57cb968b29f96 --gas-budget 10000000
 
 
 ## CURL
