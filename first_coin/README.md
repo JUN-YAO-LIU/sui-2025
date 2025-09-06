@@ -86,4 +86,6 @@ QA:
 10,000 * 10 ^ 6 = 10,000,000,000 TWENTY = 1 USDC
 2048000
 
-
+sui move test test_new_game_creation
+sui move test test_add_new_tile
+sui move test test_right_move

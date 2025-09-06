@@ -283,3 +283,11 @@ sui keytool convert PRIVATE_KEY suiprivkey1qqvakcmwlmjv48gm5vycjkah8f8xxecmka5tg
 sui keytool convert PRIVATE_KEY 0x1234... --format hex --output-format bech32
 
 sui keytool export --key-identity 0x3f58a419f88a0b054daebff43c2a759a7a390a6f749cfc991793134cf6a89e21
+
+
+1. 創建遊戲
+2. 上下左右（位置移動
+3. 合併
+4. 爆炸合併
+5. 亂數
+6. 愛心
