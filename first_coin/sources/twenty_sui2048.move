@@ -25,6 +25,7 @@ module TWENTY_PACKAGE::game {
     const BOMB_4_PROBABILITY: u64 = 200;       // 2%
     const BOMB_8_PROBABILITY: u64 = 100;       // 1%
     const REGULAR_TILE_1_PROBABILITY: u64 = 9000; // 90% of regular tiles
+    const RANDOM_TILE_VALUES: vector<u64> = vector[1, 2, 4, 8, 16];
 
     // Error codes
     const EGameNotFound: u64 = 0;
@@ -183,6 +184,50 @@ module TWENTY_PACKAGE::game {
         reason: String
     }
 
+    public entry fun new_game_entry(gameId: String, recipient: address, ctx: &mut TxContext) {
+        let game = new_game(gameId, ctx);
+        transfer_game(game, recipient, ctx);
+    }
+
+    public entry fun add_new_tile_entry(
+        game: &mut Game,
+        random_index: u64,
+        random_value: u64, 
+        bomb_random: u64,
+        bomb_cumulative : u64,
+        regular_random: u64,
+        ctx: &mut TxContext) {
+        add_new_tile(game, random_index, random_value, bomb_random, bomb_cumulative, regular_random, ctx);
+    }
+
+    public entry fun execute_move_entry(
+        game: &mut Game, 
+        direction: u8,
+        ctx: &mut TxContext) {
+
+        let direction = if (direction == UP) {
+            direction_up()
+        } else if (direction == DOWN) {
+            direction_down()
+        } else if (direction == LEFT) {
+            direction_left()
+        } else if (direction == RIGHT) {
+            direction_right()
+        } else {
+            abort EInvalidDirection
+        };
+        execute_move(game, direction, ctx);
+    }
+
+    public entry fun click_random_tile_entry(
+    game: &mut Game,
+    random_index: u64,
+    row: u8,
+    col: u8,
+    ctx: &mut TxContext) {
+        replace_random_tile_with_value(game, random_index, row, col, ctx);
+    }
+
     // Game creation
     public fun new_game(gameId : String, ctx: &mut TxContext): Game {
         let game_id = gameId;
@@ -292,7 +337,7 @@ module TWENTY_PACKAGE::game {
     }
 
     // Get all empty positions on the board
-    public fun get_empty_positions(state: &GameState): vector<Position> {
+    fun get_empty_positions(state: &GameState): vector<Position> {
         let mut empty_positions = vector::empty<Position>();
         let mut i = 0;
         
@@ -311,38 +356,45 @@ module TWENTY_PACKAGE::game {
         empty_positions
     }
 
-    // 在 game 模組中添加這些函數
-    public fun get_board(game: &Game): &Table<Position, Tile> {
-        &game.state.board
-    }
-
-    public fun get_board_mut(game: &mut Game): &mut Table<Position, Tile> {
-        &mut game.state.board
-    }
-
-    public fun get_tile_value(tile: &Tile): u64 {
-        tile.value
-    }
-
-    public fun get_tile_type(tile: &Tile): u8 {
-        if (tile.is_bomb) {
-            3
-        } else if (tile.is_heart) {
-            2
-        } else if (tile.is_random) {
-            1
-        } else {
-            0
-        }
-    }
-
-    public fun get_state(game: &Game): &GameState {
-        &game.state
-    }
-
-    // 如果需要可變引用
-    public fun get_state_mut(game: &mut Game): &mut GameState {
-        &mut game.state
+    // Get random tile value (for external use)
+    /// 點擊隨機方塊後替換為新的隨機值
+    public fun replace_random_tile_with_value(
+        game: &mut Game,
+        random_index: u64,
+        row: u8,
+        col: u8,
+        ctx: &mut TxContext
+    ) {
+        // 檢查遊戲是否結束
+        assert!(!game.state.is_game_over, EGameOver);
+        
+        // 檢查隨機索引是否有效
+        assert!(random_index < vector::length(&RANDOM_TILE_VALUES), 1); // 假設錯誤碼 1
+        
+        // 從預定義的隨機值中獲取新值
+        let random_value = *vector::borrow(&RANDOM_TILE_VALUES, random_index);
+        
+        let pos = position(row, col);
+        
+        // 檢查位置是否存在方塊
+        assert!(table::contains(&game.state.board, pos), 2); // 假設錯誤碼 2
+        
+        // 獲取舊方塊並檢查是否為隨機方塊
+        let old_tile = table::remove(&mut game.state.board, pos);
+        assert!(is_random(&old_tile), 3); // 確保是隨機方塊，假設錯誤碼 3
+        
+        // 創建新的普通方塊（替換隨機方塊）
+        let new_tile = tile(random_value, tile_type_regular());
+        
+        // 添加新方塊到相同位置
+        table::add(&mut game.state.board, pos, new_tile);
+        
+        // 發出事件通知方塊被替換
+        event::emit(TileAdded {
+            game_id: game.state.id,
+            position: pos,
+            tile: new_tile
+        });
     }
 
     // Execute a move in the specified direction
@@ -524,7 +576,7 @@ module TWENTY_PACKAGE::game {
     }
 
     // Get column from board
-    public fun get_column(state: &GameState, col_index: u8): vector<Tile> {
+    fun get_column(state: &GameState, col_index: u8): vector<Tile> {
         let mut column = vector::empty<Tile>();
         let mut i = 0;
         
@@ -544,7 +596,7 @@ module TWENTY_PACKAGE::game {
     }
 
     // Process line with bomb handling
-    public fun process_line_with_bombs(line: vector<Tile>, reverse: bool): (vector<Tile>, bool, vector<u64>) {
+    fun process_line_with_bombs(line: vector<Tile>, reverse: bool): (vector<Tile>, bool, vector<u64>) {
         let mut line = line;
         if (reverse) {
             vector::reverse(&mut line);
@@ -672,7 +724,7 @@ module TWENTY_PACKAGE::game {
     }
 
     // Set column on board
-    public fun set_column(game: &mut Game, col_index: u8, new_column: vector<Tile>) {
+    fun set_column(game: &mut Game, col_index: u8, new_column: vector<Tile>) {
         let mut i: u8 = 0;
         let mut column = new_column;
         
@@ -699,7 +751,7 @@ module TWENTY_PACKAGE::game {
     }
 
     // Explode at position
-    public fun explode_at(game: &mut Game, center: Position) {
+    fun explode_at(game: &mut Game, center: Position) {
         let mut affected_positions = vector::empty<Position>();
         
         // Cross-shaped explosion pattern
@@ -767,17 +819,38 @@ module TWENTY_PACKAGE::game {
         game.state.moves
     }
 
-    // Get random tile value (for external use)
-    // public fun get_random_tile_value(clock: &Clock, ctx: &mut TxContext): u64 {
-    //     let random_values = vector[1, 2, 4, 8, 16];
-    //     let random_index = random::u64_range(0, vector::length(&random_values), clock, ctx);
-    //     *vector::borrow(&random_values, random_index)
-    // }
+     // 在 game 模組中添加這些函數
+    public fun get_board(game: &Game): &Table<Position, Tile> {
+        &game.state.board
+    }
 
-    // Get random double (for external use)
-    // public fun get_random_double(clock: &Clock, ctx: &mut TxContext): u64 {
-    //     random::u64_range(0, 10000, clock, ctx)
-    // }
+    public fun get_board_mut(game: &mut Game): &mut Table<Position, Tile> {
+        &mut game.state.board
+    }
+
+    public fun get_tile_value(tile: &Tile): u64 {
+        tile.value
+    }
+
+    public fun get_tile_type(tile: &Tile): u8 {
+        if (tile.is_bomb) {
+            3
+        } else if (tile.is_heart) {
+            2
+        } else if (tile.is_random) {
+            1
+        } else {
+            0
+        }
+    }
+
+    public fun get_state(game: &Game): &GameState {
+        &game.state
+    }
+
+    public fun get_state_mut(game: &mut Game): &mut GameState {
+        &mut game.state
+    }
 
     // Transfer game ownership
     public fun transfer_game(game: Game, recipient: address, ctx: &mut TxContext) {

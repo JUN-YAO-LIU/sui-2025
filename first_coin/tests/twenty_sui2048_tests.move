@@ -764,4 +764,256 @@ module TWENTY_PACKAGE::game_tests {
         
         test::end(scenario);
     }
+
+    #[test]
+    fun test_replace_random_tile_with_value_success() {
+        let mut scenario = test::begin(ADMIN);
+        
+        next_tx(&mut scenario, ADMIN);
+        {
+            let gameId = string::utf8(b"test_replace_random");
+            let game = game::new_game(gameId, ctx(&mut scenario));
+            game::transfer_game(game, ADMIN, ctx(&mut scenario));
+        };
+
+        next_tx(&mut scenario, ADMIN);
+        {
+            let mut userGame = test::take_from_sender<Game>(&scenario);
+            
+            // Add a random tile at position (1, 1)
+            add_tile_at_position(&mut userGame, 1, 1, 1, 1, ctx(&mut scenario)); // Random tile with value 1
+            
+            // Verify the random tile is there
+            let board_before = game::get_board(&userGame);
+            let pos = game::position(1, 1);
+            assert!(table::contains(board_before, pos), 1);
+            
+            let old_tile = table::borrow(board_before, pos);
+            assert!(game::is_random(old_tile), 2);
+            assert!(game::get_tile_value(old_tile) == 1, 3);
+            
+            // Replace random tile with value at index 0 (should be value 1)
+            game::replace_random_tile_with_value(&mut userGame, 0, 1, 1, ctx(&mut scenario));
+            
+            // Verify the replacement
+            let board_after = game::get_board(&userGame);
+            assert!(table::contains(board_after, pos), 4);
+            
+            let new_tile = table::borrow(board_after, pos);
+            assert!(!game::is_random(new_tile), 5); // Should not be random anymore
+            assert!(game::get_tile_value(new_tile) == 1, 6); // Should have value 1
+            
+            test::return_to_sender(&scenario, userGame);
+        };
+        
+        test::end(scenario);
+    }
+
+    #[test]
+    fun test_replace_random_tile_with_different_values() {
+        let mut scenario = test::begin(ADMIN);
+        
+        next_tx(&mut scenario, ADMIN);
+        {
+            let gameId = string::utf8(b"test_replace_different");
+            let game = game::new_game(gameId, ctx(&mut scenario));
+            game::transfer_game(game, ADMIN, ctx(&mut scenario));
+        };
+
+        next_tx(&mut scenario, ADMIN);
+        {
+            let mut userGame = test::take_from_sender<Game>(&scenario);
+            
+            // Add a random tile at position (2, 2)
+            add_tile_at_position(&mut userGame, 2, 2, 1, 1, ctx(&mut scenario)); // Random tile
+            
+            // Test replacing with different random values
+            // Index 1 should give value 2
+            game::replace_random_tile_with_value(&mut userGame, 1, 2, 2, ctx(&mut scenario));
+            
+            let board = game::get_board(&userGame);
+            let pos = game::position(2, 2);
+            let tile = table::borrow(board, pos);
+            assert!(game::get_tile_value(tile) == 2, 1);
+            assert!(!game::is_random(tile), 2);
+            
+            // Add another random tile and test index 2 (value 4)
+            add_tile_at_position(&mut userGame, 3, 3, 1, 1, ctx(&mut scenario));
+            game::replace_random_tile_with_value(&mut userGame, 2, 3, 3, ctx(&mut scenario));
+            
+            // Get fresh board reference after the second replacement
+            let board_after = game::get_board(&userGame);
+            let pos2 = game::position(3, 3);
+            let tile2 = table::borrow(board_after, pos2);
+            assert!(game::get_tile_value(tile2) == 4, 3);
+            assert!(!game::is_random(tile2), 4);
+            
+            test::return_to_sender(&scenario, userGame);
+        };
+        
+        test::end(scenario);
+    }
+
+    // #[test]
+    // fun test_replace_random_tile_game_over() {
+    //     let mut scenario = test::begin(ADMIN);
+        
+    //     next_tx(&mut scenario, ADMIN);
+    //     {
+    //         let gameId = string::utf8(b"test_replace_game_over");
+    //         let game = game::new_game(gameId, ctx(&mut scenario));
+    //         game::transfer_game(game, ADMIN, ctx(&mut scenario));
+    //     };
+
+    //     next_tx(&mut scenario, ADMIN);
+    //     {
+    //         let mut userGame = test::take_from_sender<Game>(&scenario);
+            
+    //         // Add a random tile
+    //         add_tile_at_position(&mut userGame, 1, 1, 1, 1, ctx(&mut scenario));
+            
+    //         // not exist the tile.
+    //         game::replace_random_tile_with_value(&mut userGame, 0, 1, 1, ctx(&mut scenario));
+            
+    //         test::return_to_sender(&scenario, userGame);
+    //     };
+        
+    //     test::end(scenario);
+    // }
+
+    #[test]
+    #[expected_failure(abort_code = 1)]
+    fun test_replace_random_tile_invalid_index() {
+        let mut scenario = test::begin(ADMIN);
+        
+        next_tx(&mut scenario, ADMIN);
+        {
+            let gameId = string::utf8(b"test_replace_invalid_index");
+            let game = game::new_game(gameId, ctx(&mut scenario));
+            game::transfer_game(game, ADMIN, ctx(&mut scenario));
+        };
+
+        next_tx(&mut scenario, ADMIN);
+        {
+            let mut userGame = test::take_from_sender<Game>(&scenario);
+            
+            // Add a random tile
+            add_tile_at_position(&mut userGame, 1, 1, 1, 1, ctx(&mut scenario));
+            
+            // This should fail because index 10 is out of bounds (RANDOM_TILE_VALUES has 5 elements)
+            game::replace_random_tile_with_value(&mut userGame, 10, 1, 1, ctx(&mut scenario));
+            
+            test::return_to_sender(&scenario, userGame);
+        };
+        
+        test::end(scenario);
+    }
+
+    #[test]
+    #[expected_failure(abort_code = 2)]
+    fun test_replace_random_tile_no_tile_at_position() {
+        let mut scenario = test::begin(ADMIN);
+        
+        next_tx(&mut scenario, ADMIN);
+        {
+            let gameId = string::utf8(b"test_replace_no_tile");
+            let game = game::new_game(gameId, ctx(&mut scenario));
+            game::transfer_game(game, ADMIN, ctx(&mut scenario));
+        };
+
+        next_tx(&mut scenario, ADMIN);
+        {
+            let mut userGame = test::take_from_sender<Game>(&scenario);
+            
+            // Don't add any tile at position (1, 1)
+            // This should fail because there's no tile at the position
+            game::replace_random_tile_with_value(&mut userGame, 0, 1, 1, ctx(&mut scenario));
+            
+            test::return_to_sender(&scenario, userGame);
+        };
+        
+        test::end(scenario);
+    }
+
+    #[test]
+    #[expected_failure(abort_code = 3)]
+    fun test_replace_random_tile_non_random_tile() {
+        let mut scenario = test::begin(ADMIN);
+        
+        next_tx(&mut scenario, ADMIN);
+        {
+            let gameId = string::utf8(b"test_replace_non_random");
+            let game = game::new_game(gameId, ctx(&mut scenario));
+            game::transfer_game(game, ADMIN, ctx(&mut scenario));
+        };
+
+        next_tx(&mut scenario, ADMIN);
+        {
+            let mut userGame = test::take_from_sender<Game>(&scenario);
+            
+            // Add a regular tile (not random) at position (1, 1)
+            add_tile_at_position(&mut userGame, 1, 1, 2, 0, ctx(&mut scenario)); // Regular tile
+            
+            // This should fail because the tile is not a random tile
+            game::replace_random_tile_with_value(&mut userGame, 0, 1, 1, ctx(&mut scenario));
+            
+            test::return_to_sender(&scenario, userGame);
+        };
+        
+        test::end(scenario);
+    }
+
+    #[test]
+    fun test_replace_random_tile_all_valid_indices() {
+        let mut scenario = test::begin(ADMIN);
+        
+        next_tx(&mut scenario, ADMIN);
+        {
+            let gameId = string::utf8(b"test_replace_all_indices");
+            let game = game::new_game(gameId, ctx(&mut scenario));
+            game::transfer_game(game, ADMIN, ctx(&mut scenario));
+        };
+
+        next_tx(&mut scenario, ADMIN);
+        {
+            let mut userGame = test::take_from_sender<Game>(&scenario);
+            
+            // Test all valid indices: 0, 1, 2, 3, 4
+            // Expected values from RANDOM_TILE_VALUES: [1, 2, 4, 8, 16]
+            
+            // Test index 0 -> value 1
+            add_tile_at_position(&mut userGame, 0, 0, 1, 1, ctx(&mut scenario));
+            game::replace_random_tile_with_value(&mut userGame, 0, 0, 0, ctx(&mut scenario));
+            let tile0 = table::borrow(game::get_board(&userGame), game::position(0, 0));
+            assert!(game::get_tile_value(tile0) == 1, 1);
+            
+            // Test index 1 -> value 2
+            add_tile_at_position(&mut userGame, 0, 1, 1, 1, ctx(&mut scenario));
+            game::replace_random_tile_with_value(&mut userGame, 1, 0, 1, ctx(&mut scenario));
+            let tile1 = table::borrow(game::get_board(&userGame), game::position(0, 1));
+            assert!(game::get_tile_value(tile1) == 2, 2);
+            
+            // Test index 2 -> value 4
+            add_tile_at_position(&mut userGame, 0, 2, 1, 1, ctx(&mut scenario));
+            game::replace_random_tile_with_value(&mut userGame, 2, 0, 2, ctx(&mut scenario));
+            let tile2 = table::borrow(game::get_board(&userGame), game::position(0, 2));
+            assert!(game::get_tile_value(tile2) == 4, 3);
+            
+            // Test index 3 -> value 8
+            add_tile_at_position(&mut userGame, 0, 3, 1, 1, ctx(&mut scenario));
+            game::replace_random_tile_with_value(&mut userGame, 3, 0, 3, ctx(&mut scenario));
+            let tile3 = table::borrow(game::get_board(&userGame), game::position(0, 3));
+            assert!(game::get_tile_value(tile3) == 8, 4);
+            
+            // Test index 4 -> value 16
+            add_tile_at_position(&mut userGame, 0, 4, 1, 1, ctx(&mut scenario));
+            game::replace_random_tile_with_value(&mut userGame, 4, 0, 4, ctx(&mut scenario));
+            let tile4 = table::borrow(game::get_board(&userGame), game::position(0, 4));
+            assert!(game::get_tile_value(tile4) == 16, 5);
+            
+            test::return_to_sender(&scenario, userGame);
+        };
+        
+        test::end(scenario);
+    }
 }
