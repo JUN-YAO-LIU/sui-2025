@@ -315,8 +315,25 @@ module TWENTY_PACKAGE::game {
     public fun get_board(game: &Game): &Table<Position, Tile> {
         &game.state.board
     }
+
+    public fun get_board_mut(game: &mut Game): &mut Table<Position, Tile> {
+        &mut game.state.board
+    }
+
     public fun get_tile_value(tile: &Tile): u64 {
         tile.value
+    }
+
+    public fun get_tile_type(tile: &Tile): u8 {
+        if (tile.is_bomb) {
+            3
+        } else if (tile.is_heart) {
+            2
+        } else if (tile.is_random) {
+            1
+        } else {
+            0
+        }
     }
 
     public fun get_state(game: &Game): &GameState {
@@ -366,7 +383,7 @@ module TWENTY_PACKAGE::game {
             score_gained: 0 // TODO: Calculate score
         });
         
-        vector::destroy_empty(explosions);
+        vector::destroy!(explosions, |_pos| ());
     }
 
     public fun move_up(game: &mut Game, ctx: &mut TxContext): (bool, vector<Position>) {
@@ -473,7 +490,9 @@ module TWENTY_PACKAGE::game {
             let mut j = 0;
             while (j < vector::length(&row_explosions)) {
                 let explosion_index = *vector::borrow(&row_explosions, j);
-                vector::push_back(&mut explosions, position(i, BOARD_SIZE - 1 - (explosion_index as u8)));
+                // For right move, explosion_index is the position in the processed row
+                // We need to map it to the actual board position
+                vector::push_back(&mut explosions, position(i, explosion_index as u8));
                 j = j + 1;
             };
             
@@ -484,7 +503,7 @@ module TWENTY_PACKAGE::game {
         (moved, explosions)
     }
 
-    // // Get row from board
+    // Get row from board
     fun get_row(state: &GameState, row_index: u8): vector<Tile> {
         let mut row = vector::empty<Tile>();
         let mut j = 0;
@@ -494,8 +513,10 @@ module TWENTY_PACKAGE::game {
             if (table::contains(&state.board, pos)) {
                 let tile = table::borrow(&state.board, pos);
                 vector::push_back(&mut row, *tile);
+            } else {
+                // 如果位置沒有 tile，添加空的 tile
+                vector::push_back(&mut row, tile(0, tile_type_regular()));
             };
-            // todo: 
             j = j + 1;
         };
         
@@ -524,69 +545,106 @@ module TWENTY_PACKAGE::game {
 
     // Process line with bomb handling
     public fun process_line_with_bombs(line: vector<Tile>, reverse: bool): (vector<Tile>, bool, vector<u64>) {
-    let mut line = line;
-    if (reverse) {
-        vector::reverse(&mut line);
-    };
-    
-    let mut explosions = vector::empty<u64>();
-    let mut moved = false;
-    let mut i = 0;
-    
-    while (i < vector::length(&line) - 1) {
-        let tile1 = *vector::borrow(&line, i);
-        let tile2 = *vector::borrow(&line, i + 1);
-        
-        // Heart tiles cannot merge
-        if (is_heart(&tile1) || is_heart(&tile2)) {
-            i = i + 1;
-            continue
+        let mut line = line;
+        if (reverse) {
+            vector::reverse(&mut line);
         };
         
-        // Merge condition: same value, not random, not exceeding max value
-        if (tile_value(&tile1) == tile_value(&tile2) && 
-            tile_value(&tile1) < MAX_VALUE && 
-            !is_random(&tile1) && !is_random(&tile2)) {
-            
-            // Check for bomb explosion
-            if (is_bomb(&tile1) || is_bomb(&tile2)) {
-                vector::push_back(&mut explosions, i);
+        let mut explosions = vector::empty<u64>();
+        let mut moved = false;
+        let mut i = 0;
+        let line_length = vector::length(&line);
+        
+        // If line has less than 2 tiles, no merging is possible
+        if (line_length < 2) {
+            // Fill empty spaces if needed
+            while (vector::length(&line) < (BOARD_SIZE as u64)) {
+                vector::push_back(&mut line, tile(0, tile_type_regular()));
             };
             
-            // Merge tiles
-            let new_value = tile_value(&tile1) + tile_value(&tile2);
-            let merged_tile = tile(new_value, tile_type_regular());
+            if (reverse) {
+                vector::reverse(&mut line);
+            };
             
-            // Remove both tiles and insert merged tile
-            vector::remove(&mut line, i + 1);
-            vector::remove(&mut line, i);
-            vector::insert(&mut line, merged_tile, i);
-            
-            moved = true;
-        } else {
-            i = i + 1;
+            return (line, moved, explosions)
         };
-    };
-    
-    // Fill empty spaces
-    while (vector::length(&line) < (BOARD_SIZE as u64)) {
-        vector::push_back(&mut line, tile(0, tile_type_regular()));
-    };
-    
-    if (reverse) {
-        vector::reverse(&mut line);
-        // Reverse explosion positions
+        
+        // First, move all non-zero tiles to the front (left)
+        let mut non_zero_tiles = vector::empty<Tile>();
         let mut i = 0;
-        while (i < vector::length(&explosions)) {
-            let explosion_index = *vector::borrow(&explosions, i);
-            let new_index = (BOARD_SIZE as u64) - 1 - explosion_index;
-            *vector::borrow_mut(&mut explosions, i) = new_index;
+        while (i < vector::length(&line)) {
+            let tile = *vector::borrow(&line, i);
+            if (tile_value(&tile) > 0) {
+                vector::push_back(&mut non_zero_tiles, tile);
+            };
             i = i + 1;
         };
-    };
+        
+        // Replace the line with non-zero tiles followed by zeros
+        line = non_zero_tiles;
+        while (vector::length(&line) < (BOARD_SIZE as u64)) {
+            vector::push_back(&mut line, tile(0, tile_type_regular()));
+        };
+        
+        // Now merge adjacent tiles with same value (each tile can only merge once per move)
+        i = 0;
+        while (i < vector::length(&line) - 1) {
+            let tile1 = *vector::borrow(&line, i);
+            let tile2 = *vector::borrow(&line, i + 1);
+            
+            // Heart tiles cannot merge
+            if (is_heart(&tile1) || is_heart(&tile2)) {
+                i = i + 1;
+                continue
+            };
+            
+            // Merge condition: same value, not random, not exceeding max value, and not empty tiles
+            if (tile_value(&tile1) == tile_value(&tile2) && 
+                tile_value(&tile1) > 0 &&
+                tile_value(&tile1) < MAX_VALUE && 
+                !is_random(&tile1) && !is_random(&tile2)) {
+                
+                // Check for bomb explosion
+                if (is_bomb(&tile1) || is_bomb(&tile2)) {
+                    vector::push_back(&mut explosions, i);
+                };
+                
+                // Merge tiles
+                let new_value = tile_value(&tile1) + tile_value(&tile2);
+                let merged_tile = tile(new_value, tile_type_regular());
+                
+                // Remove both tiles and insert merged tile
+                vector::remove(&mut line, i + 1);
+                vector::remove(&mut line, i);
+                vector::insert(&mut line, merged_tile, i);
+                
+                moved = true;
+                // Skip the next tile since it was already merged
+                i = i + 1;
+            } else {
+                i = i + 1;
+            };
+        };
     
-    (line, moved, explosions)
-}
+        // Fill empty spaces
+        while (vector::length(&line) < (BOARD_SIZE as u64)) {
+            vector::push_back(&mut line, tile(0, tile_type_regular()));
+        };
+        
+        if (reverse) {
+            vector::reverse(&mut line);
+            // Reverse explosion positions
+            let mut i = 0;
+            while (i < vector::length(&explosions)) {
+                let explosion_index = *vector::borrow(&explosions, i);
+                let new_index = (BOARD_SIZE as u64) - 1 - explosion_index;
+                *vector::borrow_mut(&mut explosions, i) = new_index;
+                i = i + 1;
+            };
+        };
+        
+        (line, moved, explosions)
+    }
 
     // Set row on board
     fun set_row(game: &mut Game, row_index: u8, new_row: vector<Tile>) {
@@ -601,7 +659,7 @@ module TWENTY_PACKAGE::game {
             };
             
             if (!vector::is_empty(&row)) {
-                let tile = vector::pop_back(&mut row);
+                let tile = vector::remove(&mut row, 0);
                 if (tile_value(&tile) > 0) {
                     table::add(&mut game.state.board, pos, tile);
                 };
@@ -628,7 +686,7 @@ module TWENTY_PACKAGE::game {
             
             // 添加新的 tile（如果存在且有效）
             if (!vector::is_empty(&column)) {
-                let tile = vector::pop_back(&mut column);
+                let tile = vector::remove(&mut column, 0);
                 if (tile_value(&tile) > 0) {
                     table::add(&mut game.state.board, pos, tile);
                 };
@@ -651,8 +709,8 @@ module TWENTY_PACKAGE::game {
             while (j < BOARD_SIZE) {
                 let pos = position(i, j);
                 if ((i == center.i && j == center.j) ||
-                    (i == center.i && (j == center.j + 1 || j == center.j - 1)) ||
-                    (j == center.j && (i == center.i + 1 || i == center.i - 1))) {
+                    (i == center.i && (j == center.j + 1 || (center.j > 0 && j == center.j - 1))) ||
+                    (j == center.j && (i == center.i + 1 || (center.i > 0 && i == center.i - 1)))) {
                     vector::push_back(&mut affected_positions, pos);
                 };
                 j = j + 1;
@@ -674,8 +732,7 @@ module TWENTY_PACKAGE::game {
                         game_id: game.state.id,
                         reason: string::utf8(b"Heart tile destroyed by explosion")
                     });
-                    vector::destroy_empty(affected_positions);
-                    return
+                    // Don't destroy affected_positions here, let it be destroyed at the end
                 };
             };
             i = i + 1;
@@ -687,7 +744,7 @@ module TWENTY_PACKAGE::game {
             affected_positions
         });
         
-        vector::destroy_empty(affected_positions);
+        // affected_positions is consumed by the event emission, no need to destroy
     }
 
     // Get game state

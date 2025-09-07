@@ -89,3 +89,25 @@ QA:
 sui move test test_new_game_creation
 sui move test test_add_new_tile
 sui move test test_right_move
+sui move test test_bomb_explosion_on_merge
+
+before
+[2,2,4,0,0]
+[8,0,0,0,0]
+[0,0,0,0,0]
+[0,0,0,0,0]
+[0,16,0,0,0]
+
+after
+[0,0,0,0,0]
+[0,0,0,0,0]
+[0,0,0,0,0]
+[0,0,0,0,0]
+[16,0,0,0,0]
+
+bomb
+[1,0,0,0,0]
+[0,0,0,0,0]
+[0,0,0,0,0]
+[0,0,0,0,0]
+[0,0,0,0,0]
