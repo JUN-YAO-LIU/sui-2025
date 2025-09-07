@@ -42,40 +42,7 @@ curl --location --request POST 'https://fullnode.mainnet.sui.io:443' \
 AAiMM8YC+zWDasWTGPk8JQCFNz4vVoSrp1tJjYhso3t0
 
 
-## MAC-dev
-
-address = 0x3f58a419f88a0b054daebff43c2a759a7a390a6f749cfc991793134cf6a89e21
-
-PackageID = 0xf001416442c35c99ce1665ad2b5141ccd4eaaea191ff522932bba578e44dce8c
-
-USDC_Vault = 0xbf1ecffe4d404a53eebdc396ae48f7361b7e362d6f42ddf04eb0c4fa370c7038
-
-UpgradeCap = 0x2641d8dcf60e1245d6012eefd0b1d75d3c3c69207d7a82bb5e899704e4691890
-
-TreasuryCap<TWENTY> = 0x6123b7110b0c33e23e7dca7089abb9f740fe4224f9db7d94e8c108833c793a11
-
-TreasuryCap<USDC> = 0xdb6c6f4741ec17a8318574d93dd5ca9aa1a0f135f6c25c9d11418544536b5cd9
-
-CoinMetadata = 0x39e3921ee35d39c9c69a5587a8f8b32cb6ff8430e01f4f14f83429ab780d2828
-
-CoinMetadata_usdc = 0x5cdfeaa11027e5a314dfa048a305b6f52528b636df7322dbff0918cd09c761e3
-
-ISSUER_TWENTY = 0x927f1d5175baff5475e448d09ebf811b839e8d8686426a0d2ff0f86c8e2314fc
-
-SUI = 0x6a1d55476153e08f43e062778e7ef1302924d4fa4a244975d7f86e7ca17d31d6
-
-不是packageID。是你錢包獲得的objectID。
-USDC = 0x637643192ee7f74640702b4deaf5c18ede94ad7157ea5e0414544a8505ee3c3d
-
-user
-0x1ab7fe6300145028517e65794d33783710b75885940ad2a9f33b177e0ba290bf
-TWENTY
-0xff41f22c069ced7fb7a097eee212f91105caea5c559d66348ffd951cbe8efe70
-
-
 sui keytool export --key-identity 0x3f58a419f88a0b054daebff43c2a759a7a390a6f749cfc991793134cf6a89e21 > my_sui_private_key.txt
-
-zkUser private key = OIg8Z+KcwNAhr38EljriQeXsD5qpgWfIkDKdScQzTFs=
 
 QA:
 
@@ -90,6 +57,24 @@ sui move test test_new_game_creation
 sui move test test_add_new_tile
 sui move test test_right_move
 sui move test test_bomb_explosion_on_merge
+
+curl -X POST "https://fullnode.mainnet.sui.io:443" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "suix_getOwnedObjects",
+    "params": [
+      "YOUR_ADDRESS",
+      {
+        "filter": {
+          "StructType": "0x{PACKAGE_ID}::game::Game"
+        }
+      },
+      null,
+      50
+    ]
+  }'
 
 before
 [2,2,4,0,0]
@@ -111,3 +96,34 @@ bomb
 [0,0,0,0,0]
 [0,0,0,0,0]
 [0,0,0,0,0]
+
+
+## MAC-dev
+
+address = 0x3f58a419f88a0b054daebff43c2a759a7a390a6f749cfc991793134cf6a89e21
+
+PackageID = 0xf001416442c35c99ce1665ad2b5141ccd4eaaea191ff522932bba578e44dce8c
+
+USDC_Vault = 0x0a52fa88e28b46cd938a2564ff0299ef736d5ea4cb4ced8e05b2b1219d8d590e
+
+UpgradeCap = 0xa274a22d5ddb4c07c083df01c4268379ac6bd6fc519a7c36603d9ae194bd00be
+
+TreasuryCap<TWENTY> = 0xf49f489a44090fe12b7400da11d48b1eb58bc9d80a4e26929483cff1cbc10737
+
+TreasuryCap<USDC> = 0x2c219cc1b6f8b93d1031f98ad205d6ea761aa640edba63408d2b9faf0ae07c1b
+
+CoinMetadata = 0xcc4ecd419f8cd9b197eec76919e6dcc49c0d9b39512d0321ecce4f9d15307523
+
+CoinMetadata_usdc = 0x7edce8b46bcf831651c586295c55c96b614e4107bc237943e21daad64c38c7c4
+
+ISSUER_TWENTY = 0x34659be682871ff5961fcf42e9458501c61298b594c822ab684f0ffaf9165eea
+
+SUI = 0x1025f84d93542dd31378ce07958a7257d21b9a7d745b5a540fa0860b59eec3b7
+
+不是packageID。是你錢包獲得的objectID。
+USDC = 0x637643192ee7f74640702b4deaf5c18ede94ad7157ea5e0414544a8505ee3c3d
+
+user
+0x1ab7fe6300145028517e65794d33783710b75885940ad2a9f33b177e0ba290bf
+TWENTY
+0xff41f22c069ced7fb7a097eee212f91105caea5c559d66348ffd951cbe8efe70

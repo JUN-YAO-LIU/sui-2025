@@ -1,17 +1,11 @@
 module TWENTY_PACKAGE::game {
     use std::vector;
     use std::string::{Self, String};
-    use std::option::{Self, Option};
     use sui::object::{Self, UID};
     use sui::transfer;
     use sui::tx_context::{Self, TxContext};
     use sui::event;
-    use sui::clock::{Self, Clock};
-    use sui::random;
     use sui::table::{Self, Table};
-    use sui::vec_set::{Self, VecSet};
-    use sui::vec_map::{Self, VecMap};
-    use std::uq64_64;
 
     // Constants
     const BOARD_SIZE: u8 = 5;
@@ -356,6 +350,16 @@ module TWENTY_PACKAGE::game {
         empty_positions
     }
 
+    fun get_random_tile_values(): vector<u64> {
+        let mut values = vector::empty<u64>();
+        vector::push_back(&mut values, 1);
+        vector::push_back(&mut values, 2);
+        vector::push_back(&mut values, 4);
+        vector::push_back(&mut values, 8);
+        vector::push_back(&mut values, 16);
+        values
+    }
+
     // Get random tile value (for external use)
     /// 點擊隨機方塊後替換為新的隨機值
     public fun replace_random_tile_with_value(
@@ -365,14 +369,16 @@ module TWENTY_PACKAGE::game {
         col: u8,
         ctx: &mut TxContext
     ) {
+        let random_tile_values = get_random_tile_values();
+
         // 檢查遊戲是否結束
         assert!(!game.state.is_game_over, EGameOver);
         
         // 檢查隨機索引是否有效
-        assert!(random_index < vector::length(&RANDOM_TILE_VALUES), 1); // 假設錯誤碼 1
+        assert!(random_index < vector::length(&random_tile_values), 1); // 假設錯誤碼 1
         
         // 從預定義的隨機值中獲取新值
-        let random_value = *vector::borrow(&RANDOM_TILE_VALUES, random_index);
+        let random_value = *vector::borrow(&random_tile_values, random_index);
         
         let pos = position(row, col);
         
