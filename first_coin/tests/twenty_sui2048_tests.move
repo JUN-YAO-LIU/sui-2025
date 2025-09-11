@@ -1512,4 +1512,258 @@ module TWENTY_PACKAGE::game_tests {
         
         test::end(scenario);
     }
+
+    #[test]
+    fun test_game_over_board_full_no_empty_cells() {
+        let mut scenario = test::begin(ADMIN);
+        
+        next_tx(&mut scenario, ADMIN);
+        {
+            let gameId = string::utf8(b"test_board_full");
+            let game = game::new_game(gameId, ctx(&mut scenario));
+            game::transfer_game(game, ADMIN, ctx(&mut scenario));
+        };
+
+        next_tx(&mut scenario, ADMIN);
+        {
+            let mut userGame = test::take_from_sender<Game>(&scenario);
+            
+            // Fill the entire 5x5 board with tiles (25 tiles total)
+            // Row 0: 2, 4, 8, 16, 32
+            add_tile_at_position(&mut userGame, 0, 0, 2, 0, ctx(&mut scenario));
+            add_tile_at_position(&mut userGame, 0, 1, 4, 0, ctx(&mut scenario));
+            add_tile_at_position(&mut userGame, 0, 2, 8, 0, ctx(&mut scenario));
+            add_tile_at_position(&mut userGame, 0, 3, 16, 0, ctx(&mut scenario));
+            add_tile_at_position(&mut userGame, 0, 4, 32, 0, ctx(&mut scenario));
+            
+            // Row 1: 64, 128, 256, 512, 1024
+            add_tile_at_position(&mut userGame, 1, 0, 64, 0, ctx(&mut scenario));
+            add_tile_at_position(&mut userGame, 1, 1, 128, 0, ctx(&mut scenario));
+            add_tile_at_position(&mut userGame, 1, 2, 256, 0, ctx(&mut scenario));
+            add_tile_at_position(&mut userGame, 1, 3, 512, 0, ctx(&mut scenario));
+            add_tile_at_position(&mut userGame, 1, 4, 1024, 0, ctx(&mut scenario));
+            
+            // Row 2: 2048, 1, 2, 4, 8
+            add_tile_at_position(&mut userGame, 2, 0, 2048, 0, ctx(&mut scenario));
+            add_tile_at_position(&mut userGame, 2, 1, 1, 0, ctx(&mut scenario));
+            add_tile_at_position(&mut userGame, 2, 2, 2, 0, ctx(&mut scenario));
+            add_tile_at_position(&mut userGame, 2, 3, 4, 0, ctx(&mut scenario));
+            add_tile_at_position(&mut userGame, 2, 4, 8, 0, ctx(&mut scenario));
+            
+            // Row 3: 16, 32, 64, 128, 256
+            add_tile_at_position(&mut userGame, 3, 0, 16, 0, ctx(&mut scenario));
+            add_tile_at_position(&mut userGame, 3, 1, 32, 0, ctx(&mut scenario));
+            add_tile_at_position(&mut userGame, 3, 2, 64, 0, ctx(&mut scenario));
+            add_tile_at_position(&mut userGame, 3, 3, 128, 0, ctx(&mut scenario));
+            add_tile_at_position(&mut userGame, 3, 4, 256, 0, ctx(&mut scenario));
+            
+            // Row 4: 512, 1024, 2048, 1, 2
+            add_tile_at_position(&mut userGame, 4, 0, 512, 0, ctx(&mut scenario));
+            add_tile_at_position(&mut userGame, 4, 1, 1024, 0, ctx(&mut scenario));
+            add_tile_at_position(&mut userGame, 4, 2, 2048, 0, ctx(&mut scenario));
+            add_tile_at_position(&mut userGame, 4, 3, 1, 0, ctx(&mut scenario));
+            add_tile_at_position(&mut userGame, 4, 4, 2, 0, ctx(&mut scenario));
+            
+            // Verify board is full (25 tiles)
+            let board = game::get_board(&userGame);
+            let mut tile_count = 0;
+            let mut i = 0;
+            while (i < 5) {
+                let mut j = 0;
+                while (j < 5) {
+                    let pos = game::position(i, j);
+                    if (table::contains(board, pos)) {
+                        tile_count = tile_count + 1;
+                    };
+                    j = j + 1;
+                };
+                i = i + 1;
+            };
+            assert!(tile_count == 25, 1); // Board should be full
+            
+            // Verify game is not over yet
+            assert!(!game::is_game_over(&userGame), 2);
+            
+            // Try to add a new tile - this should trigger game over
+            game::add_new_tile(
+                &mut userGame,
+                0,  // random_index (doesn't matter since no empty cells)
+                100, // random_value
+                50,  // bomb_random
+                0,   // bomb_cumulative
+                1000, // regular_random
+                ctx(&mut scenario)
+            );
+            
+            // Verify game is now over
+            assert!(game::is_game_over(&userGame), 3);
+            
+            // Verify board still has 25 tiles (no new tile was added)
+            let board_after = game::get_board(&userGame);
+            let mut tile_count_after = 0;
+            let mut i = 0;
+            while (i < 5) {
+                let mut j = 0;
+                while (j < 5) {
+                    let pos = game::position(i, j);
+                    if (table::contains(board_after, pos)) {
+                        tile_count_after = tile_count_after + 1;
+                    };
+                    j = j + 1;
+                };
+                i = i + 1;
+            };
+            assert!(tile_count_after == 25, 4); // Board should still have 25 tiles
+            
+            test::return_to_sender(&scenario, userGame);
+        };
+        
+        test::end(scenario);
+    }
+
+    #[test]
+    #[expected_failure(abort_code = 2)]
+    fun test_game_over_cannot_move_when_board_full() {
+        let mut scenario = test::begin(ADMIN);
+        
+        next_tx(&mut scenario, ADMIN);
+        {
+            let gameId = string::utf8(b"test_board_full_no_move");
+            let game = game::new_game(gameId, ctx(&mut scenario));
+            game::transfer_game(game, ADMIN, ctx(&mut scenario));
+        };
+
+        next_tx(&mut scenario, ADMIN);
+        {
+            let mut userGame = test::take_from_sender<Game>(&scenario);
+            
+            // Fill the entire 5x5 board with tiles that cannot merge
+            // Use different values so no merging is possible
+            let mut i = 0;
+            while (i < 5) {
+                let mut j = 0;
+                while (j < 5) {
+                    // Use different values for each position to prevent merging
+                    let value = (i * 5 + j + 1) as u64;
+                    add_tile_at_position(&mut userGame, i, j, value, 0, ctx(&mut scenario));
+                    j = j + 1;
+                };
+                i = i + 1;
+            };
+            
+            // Verify board is full
+            let board = game::get_board(&userGame);
+            let mut tile_count = 0;
+            let mut i = 0;
+            while (i < 5) {
+                let mut j = 0;
+                while (j < 5) {
+                    let pos = game::position(i, j);
+                    if (table::contains(board, pos)) {
+                        tile_count = tile_count + 1;
+                    };
+                    j = j + 1;
+                };
+                i = i + 1;
+            };
+            assert!(tile_count == 25, 1);
+            
+            // Try to add a new tile - this should trigger game over
+            game::add_new_tile(
+                &mut userGame,
+                0,  // random_index
+                100, // random_value
+                50,  // bomb_random
+                0,   // bomb_cumulative
+                1000, // regular_random
+                ctx(&mut scenario)
+            );
+            
+            // Verify game is over
+            assert!(game::is_game_over(&userGame), 2);
+            
+            // Now try to execute a move - this should fail because game is over
+            game::execute_move(&mut userGame, game::direction_up(), ctx(&mut scenario));
+            
+            test::return_to_sender(&scenario, userGame);
+        };
+        
+        test::end(scenario);
+    }
+
+    #[test]
+    fun test_game_over_board_full_after_move_creates_space() {
+        let mut scenario = test::begin(ADMIN);
+        
+        next_tx(&mut scenario, ADMIN);
+        {
+            let gameId = string::utf8(b"test_board_full_after_move");
+            let game = game::new_game(gameId, ctx(&mut scenario));
+            game::transfer_game(game, ADMIN, ctx(&mut scenario));
+        };
+
+        next_tx(&mut scenario, ADMIN);
+        {
+            let mut userGame = test::take_from_sender<Game>(&scenario);
+            
+            // Fill the board with tiles that can merge, leaving one space
+            // This will test the scenario where a move creates space, but then
+            // the board becomes full again after adding a new tile
+            
+            // Fill most of the board with different values
+            let mut i = 0;
+            while (i < 5) {
+                let mut j = 0;
+                while (j < 5) {
+                    if (!(i == 4 && j == 4)) { // Leave position (4,4) empty
+                        let value = (i * 5 + j + 1) as u64;
+                        add_tile_at_position(&mut userGame, i, j, value, 0, ctx(&mut scenario));
+                    };
+                    j = j + 1;
+                };
+                i = i + 1;
+            };
+            
+            // Add a tile at the empty position
+            add_tile_at_position(&mut userGame, 4, 4, 1, 0, ctx(&mut scenario));
+            
+            // Verify board is full
+            let board = game::get_board(&userGame);
+            let mut tile_count = 0;
+            let mut i = 0;
+            while (i < 5) {
+                let mut j = 0;
+                while (j < 5) {
+                    let pos = game::position(i, j);
+                    if (table::contains(board, pos)) {
+                        tile_count = tile_count + 1;
+                    };
+                    j = j + 1;
+                };
+                i = i + 1;
+            };
+            assert!(tile_count == 25, 1);
+            
+            // Verify game is not over yet
+            assert!(!game::is_game_over(&userGame), 2);
+            
+            // Try to add a new tile - this should trigger game over
+            game::add_new_tile(
+                &mut userGame,
+                0,  // random_index
+                100, // random_value
+                50,  // bomb_random
+                0,   // bomb_cumulative
+                1000, // regular_random
+                ctx(&mut scenario)
+            );
+            
+            // Verify game is now over
+            assert!(game::is_game_over(&userGame), 3);
+            
+            test::return_to_sender(&scenario, userGame);
+        };
+        
+        test::end(scenario);
+    }
 }

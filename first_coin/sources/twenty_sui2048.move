@@ -262,7 +262,15 @@ module TWENTY_PACKAGE::game {
         assert!(!game.state.is_game_over, EGameOver);
         
         let mut empty_positions = get_empty_positions(&game.state);
-        assert!(vector::length(&empty_positions) > 0, ENoEmptyCells);
+
+        if(vector::length(&empty_positions) == 0){
+            game.state.is_game_over = true;
+            event::emit(GameOver {
+                game_id: game.state.id,
+                reason: string::utf8(b"No empty cells to add new tile")
+            });
+            return;
+        };
         
         let position = *vector::borrow(&empty_positions, random_index);
 
