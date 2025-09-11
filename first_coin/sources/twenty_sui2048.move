@@ -269,7 +269,6 @@ module TWENTY_PACKAGE::game {
         let tile = generate_random_tile(
             random_value, 
             bomb_random, 
-            bomb_cumulative, 
             regular_random, 
             ctx);
 
@@ -293,7 +292,6 @@ module TWENTY_PACKAGE::game {
     fun generate_random_tile(
         random_value: u64, 
         bomb_random: u64,
-        bomb_cumulative : u64,
         regular_random: u64, 
         ctx: &mut TxContext): Tile {
 
@@ -306,18 +304,19 @@ module TWENTY_PACKAGE::game {
             return tile(1, tile_type_heart())
         };
         
-        // Tier 2: Bomb tile selection
-        
+        let mut bomb_cumulative = 0;
+
+        // Tier 2: Bomb tile selection    
         if (bomb_random < BOMB_2_PROBABILITY) {
             return tile(2, tile_type_bomb())
         };
         
-        // bomb_cumulative = bomb_cumulative + BOMB_2_PROBABILITY;
+        bomb_cumulative = bomb_cumulative + BOMB_2_PROBABILITY;
         if (bomb_random < bomb_cumulative + BOMB_4_PROBABILITY) {
             return tile(4, tile_type_bomb())
         };
         
-        // bomb_cumulative = bomb_cumulative + BOMB_4_PROBABILITY;
+        bomb_cumulative = bomb_cumulative + BOMB_4_PROBABILITY;
         if (bomb_random < bomb_cumulative + BOMB_8_PROBABILITY) {
             return tile(8, tile_type_bomb())
         };
