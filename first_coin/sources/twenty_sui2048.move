@@ -312,13 +312,12 @@ module TWENTY_PACKAGE::game {
             return tile(2, tile_type_bomb())
         };
         
-        bomb_cumulative = bomb_cumulative + BOMB_2_PROBABILITY;
-        if (bomb_random < bomb_cumulative + BOMB_4_PROBABILITY) {
+        if (bomb_random < bomb_cumulative + BOMB_2_PROBABILITY + BOMB_4_PROBABILITY) {
             return tile(4, tile_type_bomb())
         };
         
-        bomb_cumulative = bomb_cumulative + BOMB_4_PROBABILITY;
-        if (bomb_random < bomb_cumulative + BOMB_8_PROBABILITY) {
+        // bomb_cumulative = bomb_cumulative + BOMB_4_PROBABILITY;
+        if (bomb_random < bomb_cumulative + BOMB_2_PROBABILITY + BOMB_4_PROBABILITY + BOMB_8_PROBABILITY) {
             return tile(8, tile_type_bomb())
         };
         
@@ -451,7 +450,7 @@ module TWENTY_PACKAGE::game {
         
         while (j < BOARD_SIZE) {
             let column = get_column(&game.state, j);
-            let (new_column, column_moved, column_explosions) = process_line_with_bombs(column, false);
+            let (new_column, column_moved, column_explosions) = process_line_with_bombs(game, column, false);
             
             if (column_moved) {
                 moved = true;
@@ -480,7 +479,7 @@ module TWENTY_PACKAGE::game {
 
         while (j < BOARD_SIZE) {
             let column = get_column(&game.state, j);
-            let (new_column, column_moved, column_explosions) = process_line_with_bombs(column, true);
+            let (new_column, column_moved, column_explosions) = process_line_with_bombs(game, column, true);
             
             if (column_moved) {
                 moved = true;
@@ -509,7 +508,7 @@ module TWENTY_PACKAGE::game {
         
         while (i < BOARD_SIZE) {
             let row = get_row(&game.state, i);
-            let (new_row, row_moved, row_explosions) = process_line_with_bombs(row, false);
+            let (new_row, row_moved, row_explosions) = process_line_with_bombs(game, row, false);
             
             if (row_moved) {
                 moved = true;
@@ -538,7 +537,7 @@ module TWENTY_PACKAGE::game {
 
         while (i < BOARD_SIZE) {
             let row = get_row(&game.state, i);
-            let (new_row, row_moved, row_explosions) = process_line_with_bombs(row, true);
+            let (new_row, row_moved, row_explosions) = process_line_with_bombs(game, row, true);
             
             if (row_moved) {
                 moved = true;
@@ -602,7 +601,7 @@ module TWENTY_PACKAGE::game {
     }
 
     // Process line with bomb handling
-    fun process_line_with_bombs(line: vector<Tile>, reverse: bool): (vector<Tile>, bool, vector<u64>) {
+    fun process_line_with_bombs(game: &mut Game,line: vector<Tile>, reverse: bool): (vector<Tile>, bool, vector<u64>) {
         let mut line = line;
         if (reverse) {
             vector::reverse(&mut line);
@@ -670,6 +669,8 @@ module TWENTY_PACKAGE::game {
                 // Merge tiles
                 let new_value = tile_value(&tile1) + tile_value(&tile2);
                 let merged_tile = tile(new_value, tile_type_regular());
+
+                game.state.score = game.state.score + new_value * VALUE_MULTIPLIER;
                 
                 // Remove both tiles and insert merged tile
                 vector::remove(&mut line, i + 1);

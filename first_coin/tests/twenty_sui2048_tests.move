@@ -5,6 +5,7 @@ module TWENTY_PACKAGE::game_tests {
     use sui::table::{Self, Table};
     use TWENTY_PACKAGE::game::{Self, Game};
 
+    const VALUE_MULTIPLIER: u64 = 1000;
     const ADMIN: address = @0xAD;
     const PLAYER1: address = @0xA1;
     const PLAYER2: address = @0xA2;
@@ -704,6 +705,7 @@ module TWENTY_PACKAGE::game_tests {
             // Check merged value
             let tile = table::borrow(board_after, game::position(0, 0));
             assert!(game::get_tile_value(tile) == 4, 4); // 2 + 2 = 4
+            assert!(game::get_score(&userGame) == 4 * VALUE_MULTIPLIER, 5);
             
             test::return_to_sender(&scenario, userGame);
         };
@@ -919,6 +921,7 @@ module TWENTY_PACKAGE::game_tests {
             
             assert!(game::get_tile_value(tile1) == 4, 3); // 2 + 2 = 4
             assert!(game::get_tile_value(tile2) == 8, 4); // 4 + 4 = 8
+            assert!(game::get_score(&userGame) == 12 * VALUE_MULTIPLIER, 5);
             
             test::return_to_sender(&scenario, userGame);
         };
@@ -1003,6 +1006,52 @@ module TWENTY_PACKAGE::game_tests {
             
             assert!(game::get_tile_value(tile1) == 4, 3); // 2 + 2 = 4
             assert!(game::get_tile_value(tile2) == 8, 4); // 4 + 4 = 8
+            
+            test::return_to_sender(&scenario, userGame);
+        };
+        
+        test::end(scenario);
+    }
+
+    #[test]
+    fun test_complex_merge_scenario() {
+        let mut scenario = test::begin(ADMIN);
+        
+        next_tx(&mut scenario, ADMIN);
+        {
+            let gameId = string::utf8(b"test_complex");
+            let game = game::new_game(gameId, ctx(&mut scenario));
+            game::transfer_game(game, ADMIN, ctx(&mut scenario));
+        };
+
+        next_tx(&mut scenario, ADMIN);
+        {
+            let mut userGame = test::take_from_sender<Game>(&scenario);
+            
+            // Create a complex scenario: row with 2, 2, 4, 4, 8
+            add_tile_at_position(&mut userGame, 0, 0, 2, 0, ctx(&mut scenario));
+            add_tile_at_position(&mut userGame, 0, 1, 2, 0, ctx(&mut scenario));
+            add_tile_at_position(&mut userGame, 0, 2, 4, 0, ctx(&mut scenario));
+            add_tile_at_position(&mut userGame, 0, 3, 4, 0, ctx(&mut scenario));
+            add_tile_at_position(&mut userGame, 0, 4, 8, 0, ctx(&mut scenario));
+            
+            // Execute right move
+            game::execute_move(&mut userGame, game::direction_right(), ctx(&mut scenario));
+            
+            let board = game::get_board(&userGame);
+            
+            // Expected result: 4, 8, 8 (from left to right)
+            assert!(table::contains(board, game::position(0, 2)), 1);
+            assert!(table::contains(board, game::position(0, 3)), 2);
+            assert!(table::contains(board, game::position(0, 4)), 3);
+            
+            let tile1 = table::borrow(board, game::position(0, 2));
+            let tile2 = table::borrow(board, game::position(0, 3));
+            let tile3 = table::borrow(board, game::position(0, 4));
+            
+            assert!(game::get_tile_value(tile1) == 4, 4); // 2 + 2 = 4
+            assert!(game::get_tile_value(tile2) == 8, 5); // 4 + 4 = 8
+            assert!(game::get_tile_value(tile3) == 8, 6); // 8 remains
             
             test::return_to_sender(&scenario, userGame);
         };
@@ -1110,7 +1159,13 @@ module TWENTY_PACKAGE::game_tests {
             assert!(!table::contains(board, game::position(0, 1)), 2); // Adjacent tile
             assert!(!table::contains(board, game::position(1, 0)), 3); // Adjacent tile
             assert!(!table::contains(board, game::position(1, 1)), 4); // Adjacent tile
-            
+
+            let tile = table::borrow(board, game::position(1, 4));
+            assert!(table::contains(board, game::position(1, 4)), 5);
+            assert!(game::get_tile_value(tile) == 16, 6);
+
+            assert!(game::get_score(&userGame) == 4 * VALUE_MULTIPLIER, 6);
+
             test::return_to_sender(&scenario, userGame);
         };
         
@@ -1159,6 +1214,38 @@ module TWENTY_PACKAGE::game_tests {
         test::end(scenario);
     }
 
+     #[test]
+    fun test_heart_tile_destruction_by_bomb() {
+        let mut scenario = test::begin(ADMIN);
+        
+        next_tx(&mut scenario, ADMIN);
+        {
+            let gameId = string::utf8(b"test_heart_bomb");
+            let game = game::new_game(gameId, ctx(&mut scenario));
+            game::transfer_game(game, ADMIN, ctx(&mut scenario));
+        };
+
+        next_tx(&mut scenario, ADMIN);
+        {
+            let mut userGame = test::take_from_sender<Game>(&scenario);
+            
+            // Add bomb tile and heart tile adjacent to each other
+            add_tile_at_position(&mut userGame, 0, 0, 2, 3, ctx(&mut scenario)); // Bomb tile
+            add_tile_at_position(&mut userGame, 0, 1, 2, 0, ctx(&mut scenario)); // Regular tile with same value (will merge with bomb)
+            add_tile_at_position(&mut userGame, 0, 2, 1, 2, ctx(&mut scenario)); // Heart tile (will be destroyed by explosion)
+            
+            // Execute right move to trigger bomb explosion
+            game::execute_move(&mut userGame, game::direction_right(), ctx(&mut scenario));
+            
+            // Check that game is over due to heart tile destruction
+            assert!(game::is_game_over(&userGame), 1);
+            
+            test::return_to_sender(&scenario, userGame);
+        };
+        
+        test::end(scenario);
+    }
+
     #[test]
     fun test_random_tile_behavior() {
         let mut scenario = test::begin(ADMIN);
@@ -1194,84 +1281,6 @@ module TWENTY_PACKAGE::game_tests {
             assert!(!game::is_random(regular_tile), 4);
             assert!(game::get_tile_value(random_tile) == 2, 5);
             assert!(game::get_tile_value(regular_tile) == 2, 6);
-            
-            test::return_to_sender(&scenario, userGame);
-        };
-        
-        test::end(scenario);
-    }
-
-    #[test]
-    fun test_heart_tile_destruction_by_bomb() {
-        let mut scenario = test::begin(ADMIN);
-        
-        next_tx(&mut scenario, ADMIN);
-        {
-            let gameId = string::utf8(b"test_heart_bomb");
-            let game = game::new_game(gameId, ctx(&mut scenario));
-            game::transfer_game(game, ADMIN, ctx(&mut scenario));
-        };
-
-        next_tx(&mut scenario, ADMIN);
-        {
-            let mut userGame = test::take_from_sender<Game>(&scenario);
-            
-            // Add bomb tile and heart tile adjacent to each other
-            add_tile_at_position(&mut userGame, 0, 0, 2, 3, ctx(&mut scenario)); // Bomb tile
-            add_tile_at_position(&mut userGame, 0, 1, 2, 0, ctx(&mut scenario)); // Regular tile with same value (will merge with bomb)
-            add_tile_at_position(&mut userGame, 0, 2, 1, 2, ctx(&mut scenario)); // Heart tile (will be destroyed by explosion)
-            
-            // Execute right move to trigger bomb explosion
-            game::execute_move(&mut userGame, game::direction_right(), ctx(&mut scenario));
-            
-            // Check that game is over due to heart tile destruction
-            assert!(game::is_game_over(&userGame), 1);
-            
-            test::return_to_sender(&scenario, userGame);
-        };
-        
-        test::end(scenario);
-    }
-
-    #[test]
-    fun test_complex_merge_scenario() {
-        let mut scenario = test::begin(ADMIN);
-        
-        next_tx(&mut scenario, ADMIN);
-        {
-            let gameId = string::utf8(b"test_complex");
-            let game = game::new_game(gameId, ctx(&mut scenario));
-            game::transfer_game(game, ADMIN, ctx(&mut scenario));
-        };
-
-        next_tx(&mut scenario, ADMIN);
-        {
-            let mut userGame = test::take_from_sender<Game>(&scenario);
-            
-            // Create a complex scenario: row with 2, 2, 4, 4, 8
-            add_tile_at_position(&mut userGame, 0, 0, 2, 0, ctx(&mut scenario));
-            add_tile_at_position(&mut userGame, 0, 1, 2, 0, ctx(&mut scenario));
-            add_tile_at_position(&mut userGame, 0, 2, 4, 0, ctx(&mut scenario));
-            add_tile_at_position(&mut userGame, 0, 3, 4, 0, ctx(&mut scenario));
-            add_tile_at_position(&mut userGame, 0, 4, 8, 0, ctx(&mut scenario));
-            
-            // Execute right move
-            game::execute_move(&mut userGame, game::direction_right(), ctx(&mut scenario));
-            
-            let board = game::get_board(&userGame);
-            
-            // Expected result: 4, 8, 8 (from left to right)
-            assert!(table::contains(board, game::position(0, 2)), 1);
-            assert!(table::contains(board, game::position(0, 3)), 2);
-            assert!(table::contains(board, game::position(0, 4)), 3);
-            
-            let tile1 = table::borrow(board, game::position(0, 2));
-            let tile2 = table::borrow(board, game::position(0, 3));
-            let tile3 = table::borrow(board, game::position(0, 4));
-            
-            assert!(game::get_tile_value(tile1) == 4, 4); // 2 + 2 = 4
-            assert!(game::get_tile_value(tile2) == 8, 5); // 4 + 4 = 8
-            assert!(game::get_tile_value(tile3) == 8, 6); // 8 remains
             
             test::return_to_sender(&scenario, userGame);
         };
@@ -1367,33 +1376,6 @@ module TWENTY_PACKAGE::game_tests {
         
         test::end(scenario);
     }
-
-    // #[test]
-    // fun test_replace_random_tile_game_over() {
-    //     let mut scenario = test::begin(ADMIN);
-        
-    //     next_tx(&mut scenario, ADMIN);
-    //     {
-    //         let gameId = string::utf8(b"test_replace_game_over");
-    //         let game = game::new_game(gameId, ctx(&mut scenario));
-    //         game::transfer_game(game, ADMIN, ctx(&mut scenario));
-    //     };
-
-    //     next_tx(&mut scenario, ADMIN);
-    //     {
-    //         let mut userGame = test::take_from_sender<Game>(&scenario);
-            
-    //         // Add a random tile
-    //         add_tile_at_position(&mut userGame, 1, 1, 1, 1, ctx(&mut scenario));
-            
-    //         // not exist the tile.
-    //         game::replace_random_tile_with_value(&mut userGame, 0, 1, 1, ctx(&mut scenario));
-            
-    //         test::return_to_sender(&scenario, userGame);
-    //     };
-        
-    //     test::end(scenario);
-    // }
 
     #[test]
     #[expected_failure(abort_code = 1)]
