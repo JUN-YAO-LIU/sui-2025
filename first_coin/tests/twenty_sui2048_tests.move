@@ -84,8 +84,7 @@ module TWENTY_PACKAGE::game_tests {
             // 或者使用現有的 add_new_tile 並檢查結果
             game::add_new_tile(
                 &mut userGame,
-                1,  // 位置亂數 0: (0,0), 1: (0,1), 2: (0,2), 3: (0,3), 4: (1,0), 5: (1,1), 6: (1,2), 7: (1,3),
-                    // 8: (2,0), 9: (2,1), 10: (2,2), 11: (2,3), 12: (3,0), 13: (3,1), 14: (3,2), 15: (3,3)
+                1,  // 位置亂數 0: (0,0), 1: (0,1), 2: (0,2), 3: (0,3), 4: (0,4), 5: (1,0), 6: (1,1), 7: (1,2), 8: (1,3), 9: (1,4), 10: (2,0), 11: (2,1), 12: (2,2), 13: (2,3), 14: (2,4), 15: (3,0), 16: (3,1), 17: (3,2), 18: (3,3), 19: (3,4), 20: (4,0), 21: (4,1), 22: (4,2), 23: (4,3), 24: (4,4)
                 4, // random rate
                 1, // bomb rate
                 1, // bomb rate calculation
@@ -134,6 +133,521 @@ module TWENTY_PACKAGE::game_tests {
             table::remove(board, pos);
         };
         table::add(board, pos, tile);
+    }
+
+    #[test]
+    fun test_move_up_not_merge() {
+        let mut scenario = test::begin(ADMIN);
+        
+        next_tx(&mut scenario, ADMIN);
+        {
+            let gameId = string::utf8(b"test_up");
+            let game = game::new_game(gameId, ctx(&mut scenario));
+            game::transfer_game(game, ADMIN, ctx(&mut scenario));
+        };
+
+        next_tx(&mut scenario, ADMIN);
+        {
+            let mut userGame = test::take_from_sender<Game>(&scenario);
+            
+            // Add tiles at bottom of board
+            add_tile_at_position(&mut userGame, 0, 0, 2, 0, ctx(&mut scenario)); // Regular tile
+            add_tile_at_position(&mut userGame, 4, 1, 1, 0, ctx(&mut scenario)); // Regular tile
+            
+            // Debug: Check initial state
+            let board_before = game::get_board(&userGame);
+            std::debug::print(&string::utf8(b"Before move:"));
+            std::debug::print(board_before);
+            
+            // Execute up move
+            game::execute_move(&mut userGame, game::direction_up(), ctx(&mut scenario));
+            
+            // Debug: Check final state
+            let board_after = game::get_board(&userGame);
+            std::debug::print(&string::utf8(b"After move:"));
+            std::debug::print(board_after);
+            
+            // Debug: Check all positions in column 0
+            let mut i = 0;
+            while (i < 5) {
+                let pos = game::position(i, 0);
+                if (table::contains(board_after, pos)) {
+                    let tile = table::borrow(board_after, pos);
+                    std::debug::print(&string::utf8(b"Position "));
+                    std::debug::print(&i);
+                    std::debug::print(&string::utf8(b" has value "));
+                    std::debug::print(&game::get_tile_value(tile));
+                };
+                i = i + 1;
+            };
+            
+            // Check that tiles moved to top
+            assert!(table::contains(board_after, game::position(0, 0)), 1);
+            assert!(table::contains(board_after, game::position(0, 1)), 2);
+            assert!(!table::contains(board_after, game::position(4, 1)), 3);
+            
+            // Check merged value
+            let tile_1 = table::borrow(board_after, game::position(0, 0));
+            assert!(game::get_tile_value(tile_1) == 2, 4);
+
+            let tile_2 = table::borrow(board_after, game::position(0, 1));
+            assert!(game::get_tile_value(tile_2) == 1, 5);
+
+            test::return_to_sender(&scenario, userGame);
+        };
+        
+        test::end(scenario);
+    }
+
+    #[test]
+    fun test_move_up_not_merge_not_move() {
+        let mut scenario = test::begin(ADMIN);
+        
+        next_tx(&mut scenario, ADMIN);
+        {
+            let gameId = string::utf8(b"test_up");
+            let game = game::new_game(gameId, ctx(&mut scenario));
+            game::transfer_game(game, ADMIN, ctx(&mut scenario));
+        };
+
+        next_tx(&mut scenario, ADMIN);
+        {
+            let mut userGame = test::take_from_sender<Game>(&scenario);
+            
+            // Add tiles at bottom of board
+            add_tile_at_position(&mut userGame, 0, 0, 2, 0, ctx(&mut scenario)); // Regular tile
+            add_tile_at_position(&mut userGame, 0, 1, 1, 0, ctx(&mut scenario)); // Regular tile
+            
+            // Debug: Check initial state
+            let board_before = game::get_board(&userGame);
+            std::debug::print(&string::utf8(b"Before move:"));
+            std::debug::print(board_before);
+            
+            // Execute up move
+            game::execute_move(&mut userGame, game::direction_up(), ctx(&mut scenario));
+            
+            // Debug: Check final state
+            let board_after = game::get_board(&userGame);
+            std::debug::print(&string::utf8(b"After move:"));
+            std::debug::print(board_after);
+            
+            // Debug: Check all positions in column 0
+            let mut i = 0;
+            while (i < 5) {
+                let pos = game::position(i, 0);
+                if (table::contains(board_after, pos)) {
+                    let tile = table::borrow(board_after, pos);
+                    std::debug::print(&string::utf8(b"Position "));
+                    std::debug::print(&i);
+                    std::debug::print(&string::utf8(b" has value "));
+                    std::debug::print(&game::get_tile_value(tile));
+                };
+                i = i + 1;
+            };
+            
+            // Check that tiles moved to top
+            assert!(table::contains(board_after, game::position(0, 0)), 1);
+            assert!(table::contains(board_after, game::position(0, 1)), 2);
+            
+            // Check merged value
+            let tile_1 = table::borrow(board_after, game::position(0, 0));
+            assert!(game::get_tile_value(tile_1) == 2, 4);
+
+            let tile_2 = table::borrow(board_after, game::position(0, 1));
+            assert!(game::get_tile_value(tile_2) == 1, 5);
+
+            test::return_to_sender(&scenario, userGame);
+        };
+        
+        test::end(scenario);
+    }
+
+    #[test]
+    fun test_move_down_not_merge() {
+        let mut scenario = test::begin(ADMIN);
+        
+        next_tx(&mut scenario, ADMIN);
+        {
+            let gameId = string::utf8(b"test_up");
+            let game = game::new_game(gameId, ctx(&mut scenario));
+            game::transfer_game(game, ADMIN, ctx(&mut scenario));
+        };
+
+        next_tx(&mut scenario, ADMIN);
+        {
+            let mut userGame = test::take_from_sender<Game>(&scenario);
+            
+            // Add tiles at bottom of board
+            add_tile_at_position(&mut userGame, 0, 0, 2, 0, ctx(&mut scenario)); // Regular tile
+            add_tile_at_position(&mut userGame, 4, 1, 1, 0, ctx(&mut scenario)); // Regular tile
+            
+            // Debug: Check initial state
+            let board_before = game::get_board(&userGame);
+            std::debug::print(&string::utf8(b"Before move:"));
+            std::debug::print(board_before);
+            
+            // Execute up move
+            game::execute_move(&mut userGame, game::direction_down(), ctx(&mut scenario));
+            
+            // Debug: Check final state
+            let board_after = game::get_board(&userGame);
+            std::debug::print(&string::utf8(b"After move:"));
+            std::debug::print(board_after);
+            
+            // Debug: Check all positions in column 0
+            let mut i = 0;
+            while (i < 5) {
+                let pos = game::position(i, 0);
+                if (table::contains(board_after, pos)) {
+                    let tile = table::borrow(board_after, pos);
+                    std::debug::print(&string::utf8(b"Position "));
+                    std::debug::print(&i);
+                    std::debug::print(&string::utf8(b" has value "));
+                    std::debug::print(&game::get_tile_value(tile));
+                };
+                i = i + 1;
+            };
+            
+            // Check that tiles moved to top
+            assert!(!table::contains(board_after, game::position(0, 0)), 1);
+            assert!(table::contains(board_after, game::position(4, 0)), 2);
+            assert!(table::contains(board_after, game::position(4, 1)), 3);
+            
+            // Check merged value
+            let tile_1 = table::borrow(board_after, game::position(4, 0));
+            assert!(game::get_tile_value(tile_1) == 2, 4);
+
+            let tile_2 = table::borrow(board_after, game::position(4, 1));
+            assert!(game::get_tile_value(tile_2) == 1, 5);
+
+            test::return_to_sender(&scenario, userGame);
+        };
+        
+        test::end(scenario);
+    }
+
+    #[test]
+    fun test_move_down_not_merge_not_move() {
+        let mut scenario = test::begin(ADMIN);
+        
+        next_tx(&mut scenario, ADMIN);
+        {
+            let gameId = string::utf8(b"test_up");
+            let game = game::new_game(gameId, ctx(&mut scenario));
+            game::transfer_game(game, ADMIN, ctx(&mut scenario));
+        };
+
+        next_tx(&mut scenario, ADMIN);
+        {
+            let mut userGame = test::take_from_sender<Game>(&scenario);
+            
+            // Add tiles at bottom of board
+            add_tile_at_position(&mut userGame, 4, 4, 2, 0, ctx(&mut scenario)); // Regular tile
+            add_tile_at_position(&mut userGame, 4, 1, 1, 0, ctx(&mut scenario)); // Regular tile
+            
+            // Debug: Check initial state
+            let board_before = game::get_board(&userGame);
+            std::debug::print(&string::utf8(b"Before move:"));
+            std::debug::print(board_before);
+            
+            // Execute up move
+            game::execute_move(&mut userGame, game::direction_down(), ctx(&mut scenario));
+            
+            // Debug: Check final state
+            let board_after = game::get_board(&userGame);
+            std::debug::print(&string::utf8(b"After move:"));
+            std::debug::print(board_after);
+            
+            // Debug: Check all positions in column 0
+            let mut i = 0;
+            while (i < 5) {
+                let pos = game::position(i, 0);
+                if (table::contains(board_after, pos)) {
+                    let tile = table::borrow(board_after, pos);
+                    std::debug::print(&string::utf8(b"Position "));
+                    std::debug::print(&i);
+                    std::debug::print(&string::utf8(b" has value "));
+                    std::debug::print(&game::get_tile_value(tile));
+                };
+                i = i + 1;
+            };
+            
+            // Check that tiles moved to top
+            assert!(table::contains(board_after, game::position(4, 4)), 2);
+            assert!(table::contains(board_after, game::position(4, 1)), 3);
+            
+            // Check merged value
+            let tile_1 = table::borrow(board_after, game::position(4, 4));
+            assert!(game::get_tile_value(tile_1) == 2, 4);
+
+            let tile_2 = table::borrow(board_after, game::position(4, 1));
+            assert!(game::get_tile_value(tile_2) == 1, 5);
+
+            test::return_to_sender(&scenario, userGame);
+        };
+        
+        test::end(scenario);
+    }
+
+    #[test]
+    fun test_move_right_not_merge() {
+        let mut scenario = test::begin(ADMIN);
+        
+        next_tx(&mut scenario, ADMIN);
+        {
+            let gameId = string::utf8(b"test_up");
+            let game = game::new_game(gameId, ctx(&mut scenario));
+            game::transfer_game(game, ADMIN, ctx(&mut scenario));
+        };
+
+        next_tx(&mut scenario, ADMIN);
+        {
+            let mut userGame = test::take_from_sender<Game>(&scenario);
+            
+            // Add tiles at bottom of board
+            add_tile_at_position(&mut userGame, 2, 2, 2, 0, ctx(&mut scenario)); // Regular tile
+            add_tile_at_position(&mut userGame, 4, 1, 1, 0, ctx(&mut scenario)); // Regular tile
+            
+            // Debug: Check initial state
+            let board_before = game::get_board(&userGame);
+            std::debug::print(&string::utf8(b"Before move:"));
+            std::debug::print(board_before);
+            
+            // Execute up move
+            game::execute_move(&mut userGame, game::direction_right(), ctx(&mut scenario));
+            
+            // Debug: Check final state
+            let board_after = game::get_board(&userGame);
+            std::debug::print(&string::utf8(b"After move:"));
+            std::debug::print(board_after);
+            
+            // Debug: Check all positions in column 0
+            let mut i = 0;
+            while (i < 5) {
+                let pos = game::position(i, 0);
+                if (table::contains(board_after, pos)) {
+                    let tile = table::borrow(board_after, pos);
+                    std::debug::print(&string::utf8(b"Position "));
+                    std::debug::print(&i);
+                    std::debug::print(&string::utf8(b" has value "));
+                    std::debug::print(&game::get_tile_value(tile));
+                };
+                i = i + 1;
+            };
+            
+            // Check that tiles moved to top
+            assert!(!table::contains(board_after, game::position(2, 2)), 1);
+            assert!(!table::contains(board_after, game::position(4, 1)), 2);
+            assert!(table::contains(board_after, game::position(2, 4)), 3);
+            assert!(table::contains(board_after, game::position(4, 4)), 4);
+            
+            // Check merged value
+            let tile_1 = table::borrow(board_after, game::position(2, 4));
+            assert!(game::get_tile_value(tile_1) == 2, 4);
+
+            let tile_2 = table::borrow(board_after, game::position(4, 4));
+            assert!(game::get_tile_value(tile_2) == 1, 5);
+
+            test::return_to_sender(&scenario, userGame);
+        };
+        
+        test::end(scenario);
+    }
+
+    #[test]
+    fun test_move_right_not_merge_not_move() {
+        let mut scenario = test::begin(ADMIN);
+        
+        next_tx(&mut scenario, ADMIN);
+        {
+            let gameId = string::utf8(b"test_up");
+            let game = game::new_game(gameId, ctx(&mut scenario));
+            game::transfer_game(game, ADMIN, ctx(&mut scenario));
+        };
+
+        next_tx(&mut scenario, ADMIN);
+        {
+            let mut userGame = test::take_from_sender<Game>(&scenario);
+            
+            // Add tiles at bottom of board
+            add_tile_at_position(&mut userGame, 2, 4, 2, 0, ctx(&mut scenario)); // Regular tile
+            add_tile_at_position(&mut userGame, 4, 4, 1, 0, ctx(&mut scenario)); // Regular tile
+            add_tile_at_position(&mut userGame, 4, 3, 8, 0, ctx(&mut scenario)); // Regular tile
+            
+            // Debug: Check initial state
+            let board_before = game::get_board(&userGame);
+            std::debug::print(&string::utf8(b"Before move:"));
+            std::debug::print(board_before);
+            
+            // Execute up move
+            game::execute_move(&mut userGame, game::direction_right(), ctx(&mut scenario));
+            
+            // Debug: Check final state
+            let board_after = game::get_board(&userGame);
+            std::debug::print(&string::utf8(b"After move:"));
+            std::debug::print(board_after);
+            
+            // Debug: Check all positions in column 0
+            let mut i = 0;
+            while (i < 5) {
+                let pos = game::position(i, 0);
+                if (table::contains(board_after, pos)) {
+                    let tile = table::borrow(board_after, pos);
+                    std::debug::print(&string::utf8(b"Position "));
+                    std::debug::print(&i);
+                    std::debug::print(&string::utf8(b" has value "));
+                    std::debug::print(&game::get_tile_value(tile));
+                };
+                i = i + 1;
+            };
+            
+            // Check that tiles moved to top
+            assert!(table::contains(board_after, game::position(2, 4)), 3);
+            assert!(table::contains(board_after, game::position(4, 4)), 4);
+            assert!(table::contains(board_after, game::position(4, 3)), 4);
+            
+            // Check merged value
+            let tile_1 = table::borrow(board_after, game::position(2, 4));
+            assert!(game::get_tile_value(tile_1) == 2, 4);
+
+            let tile_2 = table::borrow(board_after, game::position(4, 4));
+            assert!(game::get_tile_value(tile_2) == 1, 5);
+
+            let tile_3 = table::borrow(board_after, game::position(4, 3));
+            assert!(game::get_tile_value(tile_3) == 8, 6);
+
+            test::return_to_sender(&scenario, userGame);
+        };
+        
+        test::end(scenario);
+    }
+
+    #[test]
+    fun test_move_left_not_merge_not_move() {
+        let mut scenario = test::begin(ADMIN);
+        
+        next_tx(&mut scenario, ADMIN);
+        {
+            let gameId = string::utf8(b"test_up");
+            let game = game::new_game(gameId, ctx(&mut scenario));
+            game::transfer_game(game, ADMIN, ctx(&mut scenario));
+        };
+
+        next_tx(&mut scenario, ADMIN);
+        {
+            let mut userGame = test::take_from_sender<Game>(&scenario);
+            
+            // Add tiles at bottom of board
+            add_tile_at_position(&mut userGame, 2, 0, 2, 0, ctx(&mut scenario)); // Regular tile
+            add_tile_at_position(&mut userGame, 4, 0, 1, 0, ctx(&mut scenario)); // Regular tile
+            
+            // Debug: Check initial state
+            let board_before = game::get_board(&userGame);
+            std::debug::print(&string::utf8(b"Before move:"));
+            std::debug::print(board_before);
+            
+            // Execute up move
+            game::execute_move(&mut userGame, game::direction_left(), ctx(&mut scenario));
+            
+            // Debug: Check final state
+            let board_after = game::get_board(&userGame);
+            std::debug::print(&string::utf8(b"After move:"));
+            std::debug::print(board_after);
+            
+            // Debug: Check all positions in column 0
+            let mut i = 0;
+            while (i < 5) {
+                let pos = game::position(i, 0);
+                if (table::contains(board_after, pos)) {
+                    let tile = table::borrow(board_after, pos);
+                    std::debug::print(&string::utf8(b"Position "));
+                    std::debug::print(&i);
+                    std::debug::print(&string::utf8(b" has value "));
+                    std::debug::print(&game::get_tile_value(tile));
+                };
+                i = i + 1;
+            };
+            
+            // Check that tiles moved to top
+            assert!(table::contains(board_after, game::position(2, 0)), 3);
+            assert!(table::contains(board_after, game::position(4, 0)), 4);
+            
+            // Check merged value
+            let tile_1 = table::borrow(board_after, game::position(2, 0));
+            assert!(game::get_tile_value(tile_1) == 2, 4);
+
+            let tile_2 = table::borrow(board_after, game::position(4, 0));
+            assert!(game::get_tile_value(tile_2) == 1, 5);
+
+            test::return_to_sender(&scenario, userGame);
+        };
+        
+        test::end(scenario);
+    }
+
+    #[test]
+    fun test_move_left_not_merge() {
+        let mut scenario = test::begin(ADMIN);
+        
+        next_tx(&mut scenario, ADMIN);
+        {
+            let gameId = string::utf8(b"test_up");
+            let game = game::new_game(gameId, ctx(&mut scenario));
+            game::transfer_game(game, ADMIN, ctx(&mut scenario));
+        };
+
+        next_tx(&mut scenario, ADMIN);
+        {
+            let mut userGame = test::take_from_sender<Game>(&scenario);
+            
+            // Add tiles at bottom of board
+            add_tile_at_position(&mut userGame, 2, 2, 2, 0, ctx(&mut scenario)); // Regular tile
+            add_tile_at_position(&mut userGame, 4, 1, 1, 0, ctx(&mut scenario)); // Regular tile
+            
+            // Debug: Check initial state
+            let board_before = game::get_board(&userGame);
+            std::debug::print(&string::utf8(b"Before move:"));
+            std::debug::print(board_before);
+            
+            // Execute up move
+            game::execute_move(&mut userGame, game::direction_left(), ctx(&mut scenario));
+            
+            // Debug: Check final state
+            let board_after = game::get_board(&userGame);
+            std::debug::print(&string::utf8(b"After move:"));
+            std::debug::print(board_after);
+            
+            // Debug: Check all positions in column 0
+            let mut i = 0;
+            while (i < 5) {
+                let pos = game::position(i, 0);
+                if (table::contains(board_after, pos)) {
+                    let tile = table::borrow(board_after, pos);
+                    std::debug::print(&string::utf8(b"Position "));
+                    std::debug::print(&i);
+                    std::debug::print(&string::utf8(b" has value "));
+                    std::debug::print(&game::get_tile_value(tile));
+                };
+                i = i + 1;
+            };
+            
+            // Check that tiles moved to top
+            assert!(!table::contains(board_after, game::position(2, 2)), 1);
+            assert!(!table::contains(board_after, game::position(4, 1)), 2);
+            assert!(table::contains(board_after, game::position(2, 0)), 3);
+            assert!(table::contains(board_after, game::position(4, 0)), 4);
+            
+            // Check merged value
+            let tile_1 = table::borrow(board_after, game::position(2, 0));
+            assert!(game::get_tile_value(tile_1) == 2, 4);
+
+            let tile_2 = table::borrow(board_after, game::position(4, 0));
+            assert!(game::get_tile_value(tile_2) == 1, 5);
+
+            test::return_to_sender(&scenario, userGame);
+        };
+        
+        test::end(scenario);
     }
 
     #[test]

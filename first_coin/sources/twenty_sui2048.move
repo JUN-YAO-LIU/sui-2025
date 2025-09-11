@@ -312,12 +312,12 @@ module TWENTY_PACKAGE::game {
             return tile(2, tile_type_bomb())
         };
         
-        // bomb_cumulative = bomb_cumulative + BOMB_2_PROBABILITY;
+        bomb_cumulative = bomb_cumulative + BOMB_2_PROBABILITY;
         if (bomb_random < bomb_cumulative + BOMB_4_PROBABILITY) {
             return tile(4, tile_type_bomb())
         };
         
-        // bomb_cumulative = bomb_cumulative + BOMB_4_PROBABILITY;
+        bomb_cumulative = bomb_cumulative + BOMB_4_PROBABILITY;
         if (bomb_random < bomb_cumulative + BOMB_8_PROBABILITY) {
             return tile(8, tile_type_bomb())
         };
