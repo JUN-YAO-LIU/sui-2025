@@ -27,6 +27,9 @@ module TWENTY_PACKAGE::game {
     const EGameOver: u64 = 2;
     const EInvalidMove: u64 = 3;
     const ENoEmptyCells: u64 = 4;
+    const EPositionEmpty: u64 = 5;
+    const ENotRandomTile: u64 = 6;
+    const EInvalidRandomIndex: u64 = 7;
 
     // Direction enum
     public struct Direction has copy, drop, store {
@@ -386,8 +389,12 @@ module TWENTY_PACKAGE::game {
         // 檢查遊戲是否結束
         assert!(!game.state.is_game_over, EGameOver);
         
+        // 檢查位置是否在有效範圍內
+        assert!(row < BOARD_SIZE, EInvalidMove);
+        assert!(col < BOARD_SIZE, EInvalidMove);
+        
         // 檢查隨機索引是否有效
-        assert!(random_index < vector::length(&random_tile_values), 1); // 假設錯誤碼 1
+        assert!(random_index < vector::length(&random_tile_values), EInvalidRandomIndex);
         
         // 從預定義的隨機值中獲取新值
         let random_value = *vector::borrow(&random_tile_values, random_index);
@@ -395,11 +402,11 @@ module TWENTY_PACKAGE::game {
         let pos = position(row, col);
         
         // 檢查位置是否存在方塊
-        assert!(table::contains(&game.state.board, pos), 2); // 假設錯誤碼 2
+        assert!(table::contains(&game.state.board, pos), EPositionEmpty);
         
         // 獲取舊方塊並檢查是否為隨機方塊
         let old_tile = table::remove(&mut game.state.board, pos);
-        assert!(is_random(&old_tile), 3); // 確保是隨機方塊，假設錯誤碼 3
+        assert!(is_random(&old_tile), ENotRandomTile);
         
         // 創建新的普通方塊（替換隨機方塊）
         let new_tile = tile(random_value, tile_type_regular());
@@ -862,6 +869,32 @@ module TWENTY_PACKAGE::game {
     // Check if game is over
     public fun is_game_over(game: &Game): bool {
         game.state.is_game_over
+    }
+
+    // Check if position has a tile
+    public fun has_tile_at_position(game: &Game, row: u8, col: u8): bool {
+        assert!(row < BOARD_SIZE, EInvalidMove);
+        assert!(col < BOARD_SIZE, EInvalidMove);
+        let pos = position(row, col);
+        table::contains(&game.state.board, pos)
+    }
+
+    // Check if position has a random tile
+    public fun has_random_tile_at_position(game: &Game, row: u8, col: u8): bool {
+        if (!has_tile_at_position(game, row, col)) {
+            return false
+        };
+        let pos = position(row, col);
+        let tile = table::borrow(&game.state.board, pos);
+        is_random(tile)
+    }
+
+    // Get number of empty positions
+    public fun get_empty_position_count(game: &Game): u64 {
+        let empty_positions = get_empty_positions(&game.state);
+        let count = vector::length(&empty_positions);
+        vector::destroy_empty(empty_positions);
+        count
     }
 
     // Get game score
