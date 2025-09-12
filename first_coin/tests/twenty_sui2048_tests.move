@@ -2015,4 +2015,156 @@ module TWENTY_PACKAGE::game_tests {
         
         test::end(scenario);
     }
+
+    // ===== 四個方向炸彈爆炸炸到愛心遊戲結束的測試範例 =====
+
+    #[test]
+    fun test_heart_destruction_bomb_right_move() {
+        let mut scenario = test::begin(ADMIN);
+        
+        next_tx(&mut scenario, ADMIN);
+        {
+            let gameId = string::utf8(b"test_heart_bomb_right");
+            let game = game::new_game(gameId, ctx(&mut scenario));
+            game::transfer_game(game, ADMIN, ctx(&mut scenario));
+        };
+
+        next_tx(&mut scenario, ADMIN);
+        {
+            let mut userGame = test::take_from_sender<Game>(&scenario);
+            
+            // 右移情境：炸彈在左邊，愛心在右邊
+            // 初始狀態：
+            // [B][R][ ][H][ ]
+            // B=炸彈(2), R=普通瓦片(2), H=愛心(1)
+            add_tile_at_position(&mut userGame, 0, 0, 2, 3, ctx(&mut scenario)); // Bomb tile
+            add_tile_at_position(&mut userGame, 0, 1, 2, 0, ctx(&mut scenario)); // Regular tile with same value
+            add_tile_at_position(&mut userGame, 1, 3, 1, 2, ctx(&mut scenario)); // Heart tile
+            
+            // 執行右移：炸彈和普通瓦片合併，爆炸摧毀愛心
+            game::execute_move(&mut userGame, game::direction_right(), ctx(&mut scenario));
+            
+            // 驗證遊戲結束
+            assert!(game::is_game_over(&userGame), 0);
+            
+            test::return_to_sender(&scenario, userGame);
+        };
+        
+        test::end(scenario);
+    }
+
+    #[test]
+    fun test_heart_destruction_bomb_left_move() {
+        let mut scenario = test::begin(ADMIN);
+        
+        next_tx(&mut scenario, ADMIN);
+        {
+            let gameId = string::utf8(b"test_heart_bomb_left");
+            let game = game::new_game(gameId, ctx(&mut scenario));
+            game::transfer_game(game, ADMIN, ctx(&mut scenario));
+        };
+
+        next_tx(&mut scenario, ADMIN);
+        {
+            let mut userGame = test::take_from_sender<Game>(&scenario);
+            
+            // 左移情境：炸彈在右邊，愛心在左邊
+            // 初始狀態：
+            // [ ][H][ ][R][B]
+            // B=炸彈(2), R=普通瓦片(2), H=愛心(1)
+            add_tile_at_position(&mut userGame, 0, 4, 2, 3, ctx(&mut scenario)); // Bomb tile
+            add_tile_at_position(&mut userGame, 0, 3, 2, 0, ctx(&mut scenario)); // Regular tile with same value
+            add_tile_at_position(&mut userGame, 0, 1, 1, 2, ctx(&mut scenario)); // Heart tile
+            
+            // 執行左移：炸彈和普通瓦片合併，爆炸摧毀愛心
+            game::execute_move(&mut userGame, game::direction_left(), ctx(&mut scenario));
+            
+            // 驗證遊戲結束
+            assert!(game::is_game_over(&userGame), 0);
+            
+            test::return_to_sender(&scenario, userGame);
+        };
+        
+        test::end(scenario);
+    }
+
+    #[test]
+    fun test_heart_destruction_bomb_up_move() {
+        let mut scenario = test::begin(ADMIN);
+        
+        next_tx(&mut scenario, ADMIN);
+        {
+            let gameId = string::utf8(b"test_heart_bomb_up");
+            let game = game::new_game(gameId, ctx(&mut scenario));
+            game::transfer_game(game, ADMIN, ctx(&mut scenario));
+        };
+
+        next_tx(&mut scenario, ADMIN);
+        {
+            let mut userGame = test::take_from_sender<Game>(&scenario);
+            
+            // 上移情境：炸彈在下邊，愛心在上邊
+            // 初始狀態：
+            // [H][ ][ ][ ][ ]
+            // [ ][ ][ ][ ][ ]
+            // [ ][ ][ ][ ][ ]
+            // [R][ ][ ][ ][ ]
+            // [B][ ][ ][ ][ ]
+            // B=炸彈(2), R=普通瓦片(2), H=愛心(1)
+            // 修正：讓炸彈和普通瓦片在同一列，這樣上移時會合併
+            add_tile_at_position(&mut userGame, 4, 0, 2, 3, ctx(&mut scenario)); // Bomb tile
+            add_tile_at_position(&mut userGame, 3, 0, 2, 0, ctx(&mut scenario)); // Regular tile with same value
+            add_tile_at_position(&mut userGame, 0, 0, 1, 2, ctx(&mut scenario)); // Heart tile
+            
+            // 執行上移：炸彈和普通瓦片合併，爆炸摧毀愛心
+            game::execute_move(&mut userGame, game::direction_up(), ctx(&mut scenario));
+            
+            // 驗證遊戲結束
+            assert!(game::is_game_over(&userGame), 0);
+            
+            test::return_to_sender(&scenario, userGame);
+        };
+        
+        test::end(scenario);
+    }
+
+    #[test]
+    fun test_heart_destruction_bomb_down_move() {
+        let mut scenario = test::begin(ADMIN);
+        
+        next_tx(&mut scenario, ADMIN);
+        {
+            let gameId = string::utf8(b"test_heart_bomb_down");
+            let game = game::new_game(gameId, ctx(&mut scenario));
+            game::transfer_game(game, ADMIN, ctx(&mut scenario));
+        };
+
+        next_tx(&mut scenario, ADMIN);
+        {
+            let mut userGame = test::take_from_sender<Game>(&scenario);
+            
+            // 下移情境：炸彈在上邊，愛心在下邊
+            // 初始狀態：
+            // [ ][ ][ ][B][ ]
+            // [ ][ ][ ][ ][ ]
+            // [ ][ ][ ][ ][ ]
+            // [ ][ ][ ][ ][ ]
+            // [ ][ ][ ][R][H]
+            // B=炸彈(2), R=普通瓦片(2), H=愛心(1)
+            // 修正：讓炸彈和普通瓦片在同一列，愛心在爆炸範圍內且不會被移動
+            add_tile_at_position(&mut userGame, 0, 3, 2, 3, ctx(&mut scenario)); // Bomb tile
+            add_tile_at_position(&mut userGame, 4, 3, 2, 0, ctx(&mut scenario)); // Regular tile with same value
+            add_tile_at_position(&mut userGame, 4, 4, 1, 2, ctx(&mut scenario)); // Heart tile in explosion range
+            
+            // 執行下移：炸彈和普通瓦片合併，爆炸摧毀愛心
+            game::execute_move(&mut userGame, game::direction_down(), ctx(&mut scenario));
+            
+            // 驗證遊戲結束
+            assert!(game::is_game_over(&userGame), 0);
+            
+            test::return_to_sender(&scenario, userGame);
+        };
+        
+        test::end(scenario);
+    }
 }

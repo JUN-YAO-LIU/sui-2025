@@ -259,7 +259,10 @@ module TWENTY_PACKAGE::game {
         bomb_cumulative : u64,
         regular_random: u64,
         ctx: &mut TxContext) {
-        assert!(!game.state.is_game_over, EGameOver);
+        // If game is already over, silently return without adding new tile
+        if (game.state.is_game_over) {
+            return
+        };
         
         let mut empty_positions = get_empty_positions(&game.state);
 
@@ -495,11 +498,12 @@ module TWENTY_PACKAGE::game {
                 moved = true;
             };
             
-            // Add explosions with correct row indices (reversed)
+            // Add explosions with correct row indices
+            // For move_down, process_line_with_bombs already handles the reversal
             let mut i = 0;
             while (i < vector::length(&column_explosions)) {
                 let explosion_index = *vector::borrow(&column_explosions, i);
-                vector::push_back(&mut explosions, position(BOARD_SIZE - 1 - (explosion_index as u8), j));
+                vector::push_back(&mut explosions, position(explosion_index as u8, j));
                 i = i + 1;
             };
             
@@ -771,7 +775,6 @@ module TWENTY_PACKAGE::game {
     // Explode at position
     fun explode_at(game: &mut Game, center: Position) {
         let mut affected_positions = vector::empty<Position>();
-        
         
         // Cross-shaped explosion pattern
         let mut i = 0;
