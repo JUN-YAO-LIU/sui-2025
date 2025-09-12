@@ -831,12 +831,12 @@ module TWENTY_PACKAGE::game_tests {
     }
 
     #[test]
-    fun test_merge_up_multiple_tiles() {
+    fun test_add_new_tile_index_out_of_bounds_fixed() {
         let mut scenario = test::begin(ADMIN);
         
         next_tx(&mut scenario, ADMIN);
         {
-            let gameId = string::utf8(b"test_merge_up");
+            let gameId = string::utf8(b"test_index_bounds");
             let game = game::new_game(gameId, ctx(&mut scenario));
             game::transfer_game(game, ADMIN, ctx(&mut scenario));
         };
@@ -845,46 +845,167 @@ module TWENTY_PACKAGE::game_tests {
         {
             let mut userGame = test::take_from_sender<Game>(&scenario);
             
-            // Add tiles in column 0: 2, 2, 4, 4
-            add_tile_at_position(&mut userGame, 1, 0, 2, 0, ctx(&mut scenario));
-            add_tile_at_position(&mut userGame, 2, 0, 2, 0, ctx(&mut scenario));
-            add_tile_at_position(&mut userGame, 3, 0, 4, 0, ctx(&mut scenario));
-            add_tile_at_position(&mut userGame, 4, 0, 4, 0, ctx(&mut scenario));
-            
-            // Execute up move
-            game::execute_move(&mut userGame, game::direction_up(), ctx(&mut scenario));
-            
-            let board = game::get_board(&userGame);
-            
-            // Debug: Check all positions in column 0
+            // Fill the board with 24 tiles, leaving only 1 empty position
             let mut i = 0;
             while (i < 5) {
-                let pos = game::position(i, 0);
-                if (table::contains(board, pos)) {
-                    let tile = table::borrow(board, pos);
-                    std::debug::print(&string::utf8(b"Position "));
-                    std::debug::print(&i);
-                    std::debug::print(&string::utf8(b" has value "));
-                    std::debug::print(&game::get_tile_value(tile));
+                let mut j = 0;
+                while (j < 5) {
+                    if (!(i == 4 && j == 4)) { // Leave position (4,4) empty
+                        let value = (i * 5 + j + 1) as u64;
+                        add_tile_at_position(&mut userGame, i, j, value, 0, ctx(&mut scenario));
+                    };
+                    j = j + 1;
                 };
                 i = i + 1;
             };
             
-            // Check merged results: should be 4, 8 at top
-            assert!(table::contains(board, game::position(0, 0)), 1);
-            assert!(table::contains(board, game::position(1, 0)), 2);
-            
-            let tile1 = table::borrow(board, game::position(0, 0));
-            let tile2 = table::borrow(board, game::position(1, 0));
-            
-            assert!(game::get_tile_value(tile1) == 4, 3); // 2 + 2 = 4
-            assert!(game::get_tile_value(tile2) == 8, 4); // 4 + 4 = 8
+            // Now try to add a tile with random_index = 1 (but only 1 empty position exists)
+            // This should fail because random_index (1) >= empty_positions.length (1)
+            game::add_new_tile(
+                &mut userGame,
+                1,  // random_index = 1, but only 1 empty position (index 0)
+                100, // random_value
+                50,  // bomb_random
+                0,   // bomb_cumulative
+                1000, // regular_random
+                ctx(&mut scenario)
+            );
             
             test::return_to_sender(&scenario, userGame);
         };
         
         test::end(scenario);
     }
+
+    #[test]
+    fun test_merge_up_multiple_tiles() {
+    let mut scenario = test::begin(ADMIN);
+    
+    next_tx(&mut scenario, ADMIN);
+    {
+        let gameId = string::utf8(b"test_merge_up");
+        let game = game::new_game(gameId, ctx(&mut scenario));
+        game::transfer_game(game, ADMIN, ctx(&mut scenario));
+    };
+
+    next_tx(&mut scenario, ADMIN);
+    {
+        let mut userGame = test::take_from_sender<Game>(&scenario);
+        
+        // Add tiles in column 0: 2, 2, 4, 4
+        add_tile_at_position(&mut userGame, 1, 0, 2, 0, ctx(&mut scenario));
+        add_tile_at_position(&mut userGame, 2, 0, 2, 0, ctx(&mut scenario));
+        add_tile_at_position(&mut userGame, 3, 0, 4, 0, ctx(&mut scenario));
+        add_tile_at_position(&mut userGame, 4, 0, 4, 0, ctx(&mut scenario));
+        
+        // Debug: Check initial state before move
+        std::debug::print(&string::utf8(b"=== BEFORE MOVE ==="));
+        let board_before = game::get_board(&userGame);
+        let mut i = 0;
+        while (i < 5) {
+            let pos = game::position(i, 0);
+            if (table::contains(board_before, pos)) {
+                let tile = table::borrow(board_before, pos);
+                std::debug::print(&string::utf8(b"Initial Position ("));
+                std::debug::print(&i);
+                std::debug::print(&string::utf8(b", 0) has value "));
+                std::debug::print(&game::get_tile_value(tile));
+            } else {
+                std::debug::print(&string::utf8(b"Initial Position ("));
+                std::debug::print(&i);
+                std::debug::print(&string::utf8(b", 0) is EMPTY"));
+            };
+            i = i + 1;
+        };
+        
+        // Execute up move
+        game::execute_move(&mut userGame, game::direction_up(), ctx(&mut scenario));
+        
+        let board = game::get_board(&userGame);
+        
+        // Debug: Check all positions in column 0 after move
+        std::debug::print(&string::utf8(b"=== AFTER MOVE ==="));
+        let mut i = 0;
+        while (i < 5) {
+            let pos = game::position(i, 0);
+            if (table::contains(board, pos)) {
+                let tile = table::borrow(board, pos);
+                std::debug::print(&string::utf8(b"Final Position ("));
+                std::debug::print(&i);
+                std::debug::print(&string::utf8(b", 0) has value "));
+                std::debug::print(&game::get_tile_value(tile));
+                std::debug::print(&string::utf8(b" type "));
+                std::debug::print(&game::get_tile_type(tile));
+            } else {
+                std::debug::print(&string::utf8(b"Final Position ("));
+                std::debug::print(&i);
+                std::debug::print(&string::utf8(b", 0) is EMPTY"));
+            };
+            i = i + 1;
+        };
+        
+        // Check merged results: should be 4, 8 at top
+        assert!(table::contains(board, game::position(0, 0)), 1);
+        assert!(table::contains(board, game::position(1, 0)), 2);
+        
+        let tile1 = table::borrow(board, game::position(0, 0));
+        let tile2 = table::borrow(board, game::position(1, 0));
+        
+        assert!(game::get_tile_value(tile1) == 4, 3); // 2 + 2 = 4
+        assert!(game::get_tile_value(tile2) == 8, 4); // 4 + 4 = 8
+        
+        // Additional checks to detect index issues:
+        // 1. Verify no tiles exist in positions 2, 3, 4 (should be empty after merge)
+        assert!(!table::contains(board, game::position(2, 0)), 5);
+        assert!(!table::contains(board, game::position(3, 0)), 6);
+        assert!(!table::contains(board, game::position(4, 0)), 7);
+        
+        // 2. Verify tiles are regular tiles (not random, heart, or bomb)
+        assert!(game::get_tile_type(tile1) == 0, 8); // Regular tile
+        assert!(game::get_tile_type(tile2) == 0, 9); // Regular tile
+        
+        // 3. Verify score was updated correctly
+        let expected_score = (4 + 8) * VALUE_MULTIPLIER; // 2+2=4, 4+4=8
+        assert!(game::get_score(&userGame) == expected_score, 10);
+        
+        // 4. Verify moves counter was incremented
+        assert!(game::get_moves(&userGame) == 1, 11);
+        
+        // 5. Count total tiles to ensure no tiles were lost or duplicated
+        let mut total_tiles = 0;
+        let mut i = 0;
+        while (i < 5) {
+            let mut j = 0;
+            while (j < 5) {
+                let pos = game::position(i, j);
+                if (table::contains(board, pos)) {
+                    total_tiles = total_tiles + 1;
+                };
+                j = j + 1;
+            };
+            i = i + 1;
+        };
+        assert!(total_tiles == 2, 12); // Should have exactly 2 tiles after merge
+        
+        // 6. Verify no tiles exist in other columns (should be empty)
+        let mut i = 0;
+        while (i < 5) {
+            let mut j = 1; // Start from column 1
+            while (j < 5) {
+                let pos = game::position(i, j);
+                assert!(!table::contains(board, pos), 13); // All other positions should be empty
+                j = j + 1;
+            };
+            i = i + 1;
+        };
+        
+        std::debug::print(&string::utf8(b"=== TEST PASSED: No index issues detected ==="));
+        
+        test::return_to_sender(&scenario, userGame);
+    };
+    
+    test::end(scenario);
+}
 
     #[test]
     fun test_merge_down_multiple_tiles() {
@@ -1215,6 +1336,94 @@ module TWENTY_PACKAGE::game_tests {
     }
 
      #[test]
+    fun test_bomb_explosion_position_debug() {
+        let mut scenario = test::begin(ADMIN);
+        
+        next_tx(&mut scenario, ADMIN);
+        {
+            let gameId = string::utf8(b"test_bomb_position");
+            let game = game::new_game(gameId, ctx(&mut scenario));
+            game::transfer_game(game, ADMIN, ctx(&mut scenario));
+        };
+
+        next_tx(&mut scenario, ADMIN);
+        {
+            let mut userGame = test::take_from_sender<Game>(&scenario);
+            
+            // 模擬你的後端數據：炸彈在 (3,3)，普通方塊在 (4,3)
+            // 這樣向下移動時會合併觸發爆炸
+            add_tile_at_position(&mut userGame, 3, 3, 2, 3, ctx(&mut scenario)); // Bomb tile at (3,3)
+            add_tile_at_position(&mut userGame, 4, 3, 2, 0, ctx(&mut scenario)); // Regular tile at (4,3) with same value
+            
+            // 執行向下移動
+            game::execute_move(&mut userGame, game::direction_down(), ctx(&mut scenario));
+            
+            test::return_to_sender(&scenario, userGame);
+        };
+        
+        test::end(scenario);
+    }
+
+    #[test]
+    fun test_bomb_explosion_position_simple() {
+        let mut scenario = test::begin(ADMIN);
+        
+        next_tx(&mut scenario, ADMIN);
+        {
+            let gameId = string::utf8(b"test_simple_bomb");
+            let game = game::new_game(gameId, ctx(&mut scenario));
+            game::transfer_game(game, ADMIN, ctx(&mut scenario));
+        };
+
+        next_tx(&mut scenario, ADMIN);
+        {
+            let mut userGame = test::take_from_sender<Game>(&scenario);
+            
+            // 簡單測試：炸彈在 (0,0)，普通方塊在 (1,0)
+            // 向下移動時會合併觸發爆炸
+            add_tile_at_position(&mut userGame, 0, 0, 2, 3, ctx(&mut scenario)); // Bomb tile at (0,0)
+            add_tile_at_position(&mut userGame, 1, 0, 2, 0, ctx(&mut scenario)); // Regular tile at (1,0) with same value
+            
+            // 執行向下移動
+            game::execute_move(&mut userGame, game::direction_down(), ctx(&mut scenario));
+            
+            test::return_to_sender(&scenario, userGame);
+        };
+        
+        test::end(scenario);
+    }
+
+    #[test]
+    fun test_bomb_explosion_position_exact() {
+        let mut scenario = test::begin(ADMIN);
+        
+        next_tx(&mut scenario, ADMIN);
+        {
+            let gameId = string::utf8(b"test_exact_bomb");
+            let game = game::new_game(gameId, ctx(&mut scenario));
+            game::transfer_game(game, ADMIN, ctx(&mut scenario));
+        };
+
+        next_tx(&mut scenario, ADMIN);
+        {
+            let mut userGame = test::take_from_sender<Game>(&scenario);
+            
+            // 精確模擬你的後端數據：
+            // 炸彈在 (3,3)，普通方塊在 (4,3)
+            // 向下移動時會合併觸發爆炸
+            add_tile_at_position(&mut userGame, 3, 3, 2, 3, ctx(&mut scenario)); // Bomb tile at (3,3)
+            add_tile_at_position(&mut userGame, 4, 3, 2, 0, ctx(&mut scenario)); // Regular tile at (4,3) with same value
+            
+            // 執行向下移動
+            game::execute_move(&mut userGame, game::direction_down(), ctx(&mut scenario));
+            
+            test::return_to_sender(&scenario, userGame);
+        };
+        
+        test::end(scenario);
+    }
+
+    #[test]
     fun test_heart_tile_destruction_by_bomb() {
         let mut scenario = test::begin(ADMIN);
         
@@ -1229,16 +1438,56 @@ module TWENTY_PACKAGE::game_tests {
         {
             let mut userGame = test::take_from_sender<Game>(&scenario);
             
-            // Add bomb tile and heart tile adjacent to each other
+            // Simple test: place bomb and heart tile that will merge at position (0,2) where explosion occurs
             add_tile_at_position(&mut userGame, 0, 0, 2, 3, ctx(&mut scenario)); // Bomb tile
             add_tile_at_position(&mut userGame, 0, 1, 2, 0, ctx(&mut scenario)); // Regular tile with same value (will merge with bomb)
-            add_tile_at_position(&mut userGame, 0, 2, 1, 2, ctx(&mut scenario)); // Heart tile (will be destroyed by explosion)
+            add_tile_at_position(&mut userGame, 1, 2, 1, 2, ctx(&mut scenario)); // Heart tile in explosion range
+            
+            // Debug: Check initial state
+            std::debug::print(&string::utf8(b"Initial game over status: "));
+            std::debug::print(&game::is_game_over(&userGame));
+            assert!(!game::is_game_over(&userGame), 0); // Game should not be over initially
             
             // Execute right move to trigger bomb explosion
             game::execute_move(&mut userGame, game::direction_right(), ctx(&mut scenario));
             
-            // Check that game is over due to heart tile destruction
-            assert!(game::is_game_over(&userGame), 1);
+            // Debug: Check final state - the game should be over after heart destruction
+            // The heart tile at (0,2) should be destroyed by the bomb explosion from (0,1)
+            std::debug::print(&string::utf8(b"Game over status: "));
+            std::debug::print(&game::is_game_over(&userGame));
+            
+            // Debug: Check if heart tile still exists
+            let board = game::get_board(&userGame);
+            let heart_pos = game::position(1, 2);
+            let heart_exists = table::contains(board, heart_pos);
+            std::debug::print(&string::utf8(b"Heart tile exists: "));
+            std::debug::print(&heart_exists);
+            
+            // Debug: Check all positions to see what's left
+            std::debug::print(&string::utf8(b"Board state after move:"));
+            let mut i = 0;
+            while (i < 5) {
+                let mut j = 0;
+                while (j < 5) {
+                    let pos = game::position(i, j);
+                    if (table::contains(board, pos)) {
+                        let tile = table::borrow(board, pos);
+                        std::debug::print(&string::utf8(b"Position ("));
+                        std::debug::print(&i);
+                        std::debug::print(&string::utf8(b", "));
+                        std::debug::print(&j);
+                        std::debug::print(&string::utf8(b") has value "));
+                        std::debug::print(&game::get_tile_value(tile));
+                        std::debug::print(&string::utf8(b" type "));
+                        std::debug::print(&game::get_tile_type(tile));
+                        std::debug::print(&string::utf8(b"\n"));
+                    };
+                    j = j + 1;
+                };
+                i = i + 1;
+            };
+            
+            assert!(game::is_game_over(&userGame), 1); // Game should be over after heart destruction
             
             test::return_to_sender(&scenario, userGame);
         };

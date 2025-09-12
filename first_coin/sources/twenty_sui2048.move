@@ -272,7 +272,10 @@ module TWENTY_PACKAGE::game {
             return;
         };
         
-        let position = *vector::borrow(&empty_positions, random_index);
+        // Add bounds check for random_index to prevent vector out of bounds error
+        let empty_count = vector::length(&empty_positions);
+        let valid_index = random_index % empty_count; // Use modulo to ensure valid index
+        let position = *vector::borrow(&empty_positions, valid_index);
 
         let tile = generate_random_tile(
             random_value, 
@@ -554,8 +557,8 @@ module TWENTY_PACKAGE::game {
             let mut j = 0;
             while (j < vector::length(&row_explosions)) {
                 let explosion_index = *vector::borrow(&row_explosions, j);
-                // For right move, explosion_index is the position in the processed row
-                // We need to map it to the actual board position
+                // For right move, explosion_index is already reversed in process_line_with_bombs
+                // So we can use it directly
                 vector::push_back(&mut explosions, position(i, explosion_index as u8));
                 j = j + 1;
             };
@@ -668,8 +671,9 @@ module TWENTY_PACKAGE::game {
                 tile_value(&tile1) < MAX_VALUE && 
                 !is_random(&tile1) && !is_random(&tile2)) {
                 
-                // Check for bomb explosion
+                // Check for bomb explosion - record the position where the merged tile will be placed
                 if (is_bomb(&tile1) || is_bomb(&tile2)) {
+                    // Record the position where the merged tile will be placed (this is where explosion will occur)
                     vector::push_back(&mut explosions, i);
                 };
                 
@@ -768,6 +772,7 @@ module TWENTY_PACKAGE::game {
     fun explode_at(game: &mut Game, center: Position) {
         let mut affected_positions = vector::empty<Position>();
         
+        
         // Cross-shaped explosion pattern
         let mut i = 0;
         while (i < BOARD_SIZE) {
@@ -778,6 +783,12 @@ module TWENTY_PACKAGE::game {
                     (i == center.i && (j == center.j + 1 || (center.j > 0 && j == center.j - 1))) ||
                     (j == center.j && (i == center.i + 1 || (center.i > 0 && i == center.i - 1)))) {
                     vector::push_back(&mut affected_positions, pos);
+                    // Debug: Print affected position
+                    std::debug::print(&string::utf8(b"Affected position: ("));
+                    std::debug::print(&i);
+                    std::debug::print(&string::utf8(b", "));
+                    std::debug::print(&j);
+                    std::debug::print(&string::utf8(b")\n"));
                 };
                 j = j + 1;
             };
@@ -788,11 +799,38 @@ module TWENTY_PACKAGE::game {
         let mut i = 0;
         while (i < vector::length(&affected_positions)) {
             let pos = *vector::borrow(&affected_positions, i);
+            // Debug: Check if position has a tile before removing
+            std::debug::print(&string::utf8(b"Checking position ("));
+            std::debug::print(&pos.i);
+            std::debug::print(&string::utf8(b", "));
+            std::debug::print(&pos.j);
+            std::debug::print(&string::utf8(b") - has tile: "));
+            std::debug::print(&table::contains(&game.state.board, pos));
+            std::debug::print(&string::utf8(b"\n"));
+            
             if (table::contains(&game.state.board, pos)) {
                 let tile = table::remove(&mut game.state.board, pos);
                 
+                // Debug: Print tile info before checking if it's a heart
+                std::debug::print(&string::utf8(b"Tile at position ("));
+                std::debug::print(&pos.i);
+                std::debug::print(&string::utf8(b", "));
+                std::debug::print(&pos.j);
+                std::debug::print(&string::utf8(b") has value "));
+                std::debug::print(&tile.value);
+                std::debug::print(&string::utf8(b" type "));
+                std::debug::print(&tile.tile_type.value);
+                std::debug::print(&string::utf8(b" is_heart "));
+                std::debug::print(&tile.is_heart);
+                std::debug::print(&string::utf8(b"\n"));
+                
                 // Check if heart tile was destroyed
                 if (is_heart(&tile)) {
+                    std::debug::print(&string::utf8(b"Heart tile destroyed at position ("));
+                    std::debug::print(&pos.i);
+                    std::debug::print(&string::utf8(b", "));
+                    std::debug::print(&pos.j);
+                    std::debug::print(&string::utf8(b")\n"));
                     game.state.is_game_over = true;
                     event::emit(GameOver {
                         game_id: game.state.id,

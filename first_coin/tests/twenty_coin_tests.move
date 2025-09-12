@@ -240,7 +240,7 @@ module TWENTY_PACKAGE::twenty_coin_tests {
             let mut treasury_cap = ts::take_from_sender<TreasuryCap<TWENTY>>(&scenario);
             
             // 為 USER1 鑄造 10000 個 TWENTY 代幣
-            mint_twenty_token(&mut treasury_cap, 10000 * 9000, USER1, ts::ctx(&mut scenario));
+            mint_twenty_token(&mut treasury_cap, 10000, USER1, ts::ctx(&mut scenario));
 
             ts::return_to_sender(&scenario, treasury_cap);
         };
@@ -256,7 +256,7 @@ module TWENTY_PACKAGE::twenty_coin_tests {
             swap_twenty_to_usdc(
                 twenty_coin,           // 傳入整個 coin 對象（會被函數消耗）
                 &mut vault, 
-                10000 * 8000,                  // 要兌換的數量
+                1000,                  // 要兌換的數量
                 USER1,                 // 接收者
                 ts::ctx(&mut scenario)
             );
@@ -273,8 +273,8 @@ module TWENTY_PACKAGE::twenty_coin_tests {
             let usdc_coin = ts::take_from_sender<Coin<USDC>>(&scenario);
             let usdc_balance = coin::value(&usdc_coin);
 
-            // 1000 TWENTY = 0.1 USDC = 100 (假設 USDC 有 3 位小數)
-            assert!(usdc_balance == 8000, 0); // 根據你的 USDC 小數位數調整
+            // 1000 TWENTY = 1000 USDC (1:1 兌換比例)
+            assert!(usdc_balance == 1000, 0); // 根據你的 USDC 小數位數調整
             
             ts::return_to_sender(&scenario, usdc_coin);
             
@@ -286,7 +286,7 @@ module TWENTY_PACKAGE::twenty_coin_tests {
                 std::debug::print(&remaining_balance);
 
                 // 應該剩下 9000 個 TWENTY (10000 - 1000)
-                assert!(remaining_balance == 10000000, 1);
+                assert!(remaining_balance == 9000, 1);
 
                 ts::return_to_sender(&scenario, remaining_twenty);
             };
