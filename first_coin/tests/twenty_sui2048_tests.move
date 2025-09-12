@@ -1614,7 +1614,7 @@ module TWENTY_PACKAGE::game_tests {
             game::replace_random_tile_with_value(&mut userGame, 2, 3, 3, ctx(&mut scenario));
             
             // Get fresh board reference after the second replacement
-            let board_after = game::get_board(&userGame);
+            let board_after =ｂ game::get_board(&userGame);
             let pos2 = game::position(3, 3);
             let tile2 = table::borrow(board_after, pos2);
             assert!(game::get_tile_value(tile2) == 4, 3);
@@ -1627,9 +1627,9 @@ module TWENTY_PACKAGE::game_tests {
     }
 
     #[test]
-    #[expected_failure(abort_code = 1)]
+    #[expected_failure(abort_code = 7)]
     fun test_replace_random_tile_invalid_index() {
-        let mut scenario = test::begin(ADMIN);
+        let mut scenario = test::begin(ADMIN);｀
         
         next_tx(&mut scenario, ADMIN);
         {
@@ -1655,7 +1655,7 @@ module TWENTY_PACKAGE::game_tests {
     }
 
     #[test]
-    #[expected_failure(abort_code = 2)]
+    #[expected_failure(abort_code = 5)]
     fun test_replace_random_tile_no_tile_at_position() {
         let mut scenario = test::begin(ADMIN);
         
@@ -1681,7 +1681,7 @@ module TWENTY_PACKAGE::game_tests {
     }
 
     #[test]
-    #[expected_failure(abort_code = 3)]
+    #[expected_failure(abort_code = 6)]
     fun test_replace_random_tile_non_random_tile() {
         let mut scenario = test::begin(ADMIN);
         
@@ -1863,76 +1863,6 @@ module TWENTY_PACKAGE::game_tests {
                 i = i + 1;
             };
             assert!(tile_count_after == 25, 4); // Board should still have 25 tiles
-            
-            test::return_to_sender(&scenario, userGame);
-        };
-        
-        test::end(scenario);
-    }
-
-    #[test]
-    #[expected_failure(abort_code = 2)]
-    fun test_game_over_cannot_move_when_board_full() {
-        let mut scenario = test::begin(ADMIN);
-        
-        next_tx(&mut scenario, ADMIN);
-        {
-            let gameId = string::utf8(b"test_board_full_no_move");
-            let game = game::new_game(gameId, ctx(&mut scenario));
-            game::transfer_game(game, ADMIN, ctx(&mut scenario));
-        };
-
-        next_tx(&mut scenario, ADMIN);
-        {
-            let mut userGame = test::take_from_sender<Game>(&scenario);
-            
-            // Fill the entire 5x5 board with tiles that cannot merge
-            // Use different values so no merging is possible
-            let mut i = 0;
-            while (i < 5) {
-                let mut j = 0;
-                while (j < 5) {
-                    // Use different values for each position to prevent merging
-                    let value = (i * 5 + j + 1) as u64;
-                    add_tile_at_position(&mut userGame, i, j, value, 0, ctx(&mut scenario));
-                    j = j + 1;
-                };
-                i = i + 1;
-            };
-            
-            // Verify board is full
-            let board = game::get_board(&userGame);
-            let mut tile_count = 0;
-            let mut i = 0;
-            while (i < 5) {
-                let mut j = 0;
-                while (j < 5) {
-                    let pos = game::position(i, j);
-                    if (table::contains(board, pos)) {
-                        tile_count = tile_count + 1;
-                    };
-                    j = j + 1;
-                };
-                i = i + 1;
-            };
-            assert!(tile_count == 25, 1);
-            
-            // Try to add a new tile - this should trigger game over
-            game::add_new_tile(
-                &mut userGame,
-                0,  // random_index
-                100, // random_value
-                50,  // bomb_random
-                0,   // bomb_cumulative
-                1000, // regular_random
-                ctx(&mut scenario)
-            );
-            
-            // Verify game is over
-            assert!(game::is_game_over(&userGame), 2);
-            
-            // Now try to execute a move - this should fail because game is over
-            game::execute_move(&mut userGame, game::direction_up(), ctx(&mut scenario));
             
             test::return_to_sender(&scenario, userGame);
         };

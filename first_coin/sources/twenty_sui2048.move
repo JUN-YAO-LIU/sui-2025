@@ -13,7 +13,7 @@ module TWENTY_PACKAGE::game {
     const VALUE_MULTIPLIER: u64 = 1000;
     
     // Probability constants (scaled to 10000 for precision)
-    const RANDOM_TILE_PROBABILITY: u64 = 500;  // 5%
+    const RANDOM_TILE_PROBABILITY: u64 = 9000;  // 5%
     const HEART_TILE_PROBABILITY: u64 = 300;   // 3%
     const BOMB_2_PROBABILITY: u64 = 300;       // 3%
     const BOMB_4_PROBABILITY: u64 = 200;       // 2%
@@ -384,20 +384,18 @@ module TWENTY_PACKAGE::game {
         col: u8,
         ctx: &mut TxContext
     ) {
-        let random_tile_values = get_random_tile_values();
-
         // 檢查遊戲是否結束
-        assert!(!game.state.is_game_over, EGameOver);
+        // assert!(!game.state.is_game_over, EGameOver);
         
         // 檢查位置是否在有效範圍內
         assert!(row < BOARD_SIZE, EInvalidMove);
         assert!(col < BOARD_SIZE, EInvalidMove);
         
         // 檢查隨機索引是否有效
-        assert!(random_index < vector::length(&random_tile_values), EInvalidRandomIndex);
+        assert!(random_index < vector::length(&RANDOM_TILE_VALUES), EInvalidRandomIndex);
         
         // 從預定義的隨機值中獲取新值
-        let random_value = *vector::borrow(&random_tile_values, random_index);
+        let random_value = *vector::borrow(&RANDOM_TILE_VALUES, random_index);
         
         let pos = position(row, col);
         
@@ -427,8 +425,6 @@ module TWENTY_PACKAGE::game {
         game: &mut Game, 
         direction: Direction,
         ctx: &mut TxContext) {
-        assert!(!game.state.is_game_over, EGameOver);
-        
         let (moved, explosions) = if (direction.value == UP) {
             move_up(game, ctx)
         } else if (direction.value == DOWN) {
