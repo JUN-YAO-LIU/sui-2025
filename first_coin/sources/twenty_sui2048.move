@@ -13,7 +13,7 @@ module TWENTY_PACKAGE::game {
     const VALUE_MULTIPLIER: u64 = 1000;
     
     // Probability constants (scaled to 10000 for precision)
-    const RANDOM_TILE_PROBABILITY: u64 = 9000;  // 5%
+    const RANDOM_TILE_PROBABILITY: u64 = 500;  // 5%
     const HEART_TILE_PROBABILITY: u64 = 300;   // 3%
     const BOMB_2_PROBABILITY: u64 = 300;       // 3%
     const BOMB_4_PROBABILITY: u64 = 200;       // 2%
@@ -279,9 +279,7 @@ module TWENTY_PACKAGE::game {
         };
         
         // Add bounds check for random_index to prevent vector out of bounds error
-        let empty_count = vector::length(&empty_positions);
-        let valid_index = random_index % empty_count; // Use modulo to ensure valid index
-        let position = *vector::borrow(&empty_positions, valid_index);
+        let position = *vector::borrow(&empty_positions, random_index);
 
         let tile = generate_random_tile(
             random_value, 
