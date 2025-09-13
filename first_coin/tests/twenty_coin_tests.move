@@ -283,7 +283,7 @@ module TWENTY_PACKAGE::twenty_coin_tests {
                 let remaining_twenty = ts::take_from_sender<Coin<TWENTY>>(&scenario);
                 let remaining_balance = coin::value(&remaining_twenty);
                 
-                std::debug::print(&remaining_balance);
+                // std::debug::print(&remaining_balance);
 
                 // 應該剩下 9000 個 TWENTY (10000 - 1000)
                 assert!(remaining_balance == 9000, 1);

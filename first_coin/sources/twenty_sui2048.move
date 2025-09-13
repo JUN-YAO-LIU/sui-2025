@@ -788,11 +788,11 @@ module TWENTY_PACKAGE::game {
                     (j == center.j && (i == center.i + 1 || (center.i > 0 && i == center.i - 1)))) {
                     vector::push_back(&mut affected_positions, pos);
                     // Debug: Print affected position
-                    std::debug::print(&string::utf8(b"Affected position: ("));
-                    std::debug::print(&i);
-                    std::debug::print(&string::utf8(b", "));
-                    std::debug::print(&j);
-                    std::debug::print(&string::utf8(b")\n"));
+                    // std::debug::print(&string::utf8(b"Affected position: ("));
+                    // std::debug::print(&i);
+                    // std::debug::print(&string::utf8(b", "));
+                    // std::debug::print(&j);
+                    // std::debug::print(&string::utf8(b")\n"));
                 };
                 j = j + 1;
             };
@@ -804,37 +804,37 @@ module TWENTY_PACKAGE::game {
         while (i < vector::length(&affected_positions)) {
             let pos = *vector::borrow(&affected_positions, i);
             // Debug: Check if position has a tile before removing
-            std::debug::print(&string::utf8(b"Checking position ("));
-            std::debug::print(&pos.i);
-            std::debug::print(&string::utf8(b", "));
-            std::debug::print(&pos.j);
-            std::debug::print(&string::utf8(b") - has tile: "));
-            std::debug::print(&table::contains(&game.state.board, pos));
-            std::debug::print(&string::utf8(b"\n"));
+            // std::debug::print(&string::utf8(b"Checking position ("));
+            // std::debug::print(&pos.i);
+            // std::debug::print(&string::utf8(b", "));
+            // std::debug::print(&pos.j);
+            // std::debug::print(&string::utf8(b") - has tile: "));
+            // std::debug::print(&table::contains(&game.state.board, pos));
+            // std::debug::print(&string::utf8(b"\n"));
             
             if (table::contains(&game.state.board, pos)) {
                 let tile = table::remove(&mut game.state.board, pos);
                 
                 // Debug: Print tile info before checking if it's a heart
-                std::debug::print(&string::utf8(b"Tile at position ("));
-                std::debug::print(&pos.i);
-                std::debug::print(&string::utf8(b", "));
-                std::debug::print(&pos.j);
-                std::debug::print(&string::utf8(b") has value "));
-                std::debug::print(&tile.value);
-                std::debug::print(&string::utf8(b" type "));
-                std::debug::print(&tile.tile_type.value);
-                std::debug::print(&string::utf8(b" is_heart "));
-                std::debug::print(&tile.is_heart);
-                std::debug::print(&string::utf8(b"\n"));
+                // std::debug::print(&string::utf8(b"Tile at position ("));
+                // std::debug::print(&pos.i);
+                // std::debug::print(&string::utf8(b", "));
+                // std::debug::print(&pos.j);
+                // std::debug::print(&string::utf8(b") has value "));
+                // std::debug::print(&tile.value);
+                // std::debug::print(&string::utf8(b" type "));
+                // std::debug::print(&tile.tile_type.value);
+                // std::debug::print(&string::utf8(b" is_heart "));
+                // std::debug::print(&tile.is_heart);
+                // std::debug::print(&string::utf8(b"\n"));
                 
                 // Check if heart tile was destroyed
                 if (is_heart(&tile)) {
-                    std::debug::print(&string::utf8(b"Heart tile destroyed at position ("));
-                    std::debug::print(&pos.i);
-                    std::debug::print(&string::utf8(b", "));
-                    std::debug::print(&pos.j);
-                    std::debug::print(&string::utf8(b")\n"));
+                    // std::debug::print(&string::utf8(b"Heart tile destroyed at position ("));
+                    // std::debug::print(&pos.i);
+                    // std::debug::print(&string::utf8(b", "));
+                    // std::debug::print(&pos.j);
+                    // std::debug::print(&string::utf8(b")\n"));
                     game.state.is_game_over = true;
                     event::emit(GameOver {
                         game_id: game.state.id,

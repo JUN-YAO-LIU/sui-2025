@@ -94,8 +94,8 @@ module TWENTY_PACKAGE::game_tests {
             
             let board = game::get_board(&userGame);
             let state = game::get_state(&userGame);
-            std::debug::print(state);
-            std::debug::print(board);
+            // std::debug::print(state);
+            // std::debug::print(board);
 
             let expected_position = game::position(0, 1);
 
@@ -157,16 +157,16 @@ module TWENTY_PACKAGE::game_tests {
             
             // Debug: Check initial state
             let board_before = game::get_board(&userGame);
-            std::debug::print(&string::utf8(b"Before move:"));
-            std::debug::print(board_before);
+            // std::debug::print(&string::utf8(b"Before move:"));
+            // std::debug::print(board_before);
             
             // Execute up move
             game::execute_move(&mut userGame, game::direction_up(), ctx(&mut scenario));
             
             // Debug: Check final state
             let board_after = game::get_board(&userGame);
-            std::debug::print(&string::utf8(b"After move:"));
-            std::debug::print(board_after);
+            // std::debug::print(&string::utf8(b"After move:"));
+            // std::debug::print(board_after);
             
             // Debug: Check all positions in column 0
             let mut i = 0;
@@ -174,10 +174,10 @@ module TWENTY_PACKAGE::game_tests {
                 let pos = game::position(i, 0);
                 if (table::contains(board_after, pos)) {
                     let tile = table::borrow(board_after, pos);
-                    std::debug::print(&string::utf8(b"Position "));
-                    std::debug::print(&i);
-                    std::debug::print(&string::utf8(b" has value "));
-                    std::debug::print(&game::get_tile_value(tile));
+                    // std::debug::print(&string::utf8(b"Position "));
+                    // std::debug::print(&i);
+                    // std::debug::print(&string::utf8(b" has value "));
+                    // std::debug::print(&game::get_tile_value(tile));
                 };
                 i = i + 1;
             };
@@ -221,16 +221,16 @@ module TWENTY_PACKAGE::game_tests {
             
             // Debug: Check initial state
             let board_before = game::get_board(&userGame);
-            std::debug::print(&string::utf8(b"Before move:"));
-            std::debug::print(board_before);
+            // std::debug::print(&string::utf8(b"Before move:"));
+            // std::debug::print(board_before);
             
             // Execute up move
             game::execute_move(&mut userGame, game::direction_up(), ctx(&mut scenario));
             
             // Debug: Check final state
             let board_after = game::get_board(&userGame);
-            std::debug::print(&string::utf8(b"After move:"));
-            std::debug::print(board_after);
+            // std::debug::print(&string::utf8(b"After move:"));
+            // std::debug::print(board_after);
             
             // Debug: Check all positions in column 0
             let mut i = 0;
@@ -238,10 +238,10 @@ module TWENTY_PACKAGE::game_tests {
                 let pos = game::position(i, 0);
                 if (table::contains(board_after, pos)) {
                     let tile = table::borrow(board_after, pos);
-                    std::debug::print(&string::utf8(b"Position "));
-                    std::debug::print(&i);
-                    std::debug::print(&string::utf8(b" has value "));
-                    std::debug::print(&game::get_tile_value(tile));
+                    // std::debug::print(&string::utf8(b"Position "));
+                    // std::debug::print(&i);
+                    // std::debug::print(&string::utf8(b" has value "));
+                    // std::debug::print(&game::get_tile_value(tile));
                 };
                 i = i + 1;
             };
@@ -284,16 +284,16 @@ module TWENTY_PACKAGE::game_tests {
             
             // Debug: Check initial state
             let board_before = game::get_board(&userGame);
-            std::debug::print(&string::utf8(b"Before move:"));
-            std::debug::print(board_before);
+            // std::debug::print(&string::utf8(b"Before move:"));
+            // std::debug::print(board_before);
             
             // Execute up move
             game::execute_move(&mut userGame, game::direction_down(), ctx(&mut scenario));
             
             // Debug: Check final state
             let board_after = game::get_board(&userGame);
-            std::debug::print(&string::utf8(b"After move:"));
-            std::debug::print(board_after);
+            // std::debug::print(&string::utf8(b"After move:"));
+            // std::debug::print(board_after);
             
             // Debug: Check all positions in column 0
             let mut i = 0;
@@ -301,10 +301,10 @@ module TWENTY_PACKAGE::game_tests {
                 let pos = game::position(i, 0);
                 if (table::contains(board_after, pos)) {
                     let tile = table::borrow(board_after, pos);
-                    std::debug::print(&string::utf8(b"Position "));
-                    std::debug::print(&i);
-                    std::debug::print(&string::utf8(b" has value "));
-                    std::debug::print(&game::get_tile_value(tile));
+                    // std::debug::print(&string::utf8(b"Position "));
+                    // std::debug::print(&i);
+                    // std::debug::print(&string::utf8(b" has value "));
+                    // std::debug::print(&game::get_tile_value(tile));
                 };
                 i = i + 1;
             };
@@ -348,16 +348,16 @@ module TWENTY_PACKAGE::game_tests {
             
             // Debug: Check initial state
             let board_before = game::get_board(&userGame);
-            std::debug::print(&string::utf8(b"Before move:"));
-            std::debug::print(board_before);
+            // std::debug::print(&string::utf8(b"Before move:"));
+            // std::debug::print(board_before);
             
             // Execute up move
             game::execute_move(&mut userGame, game::direction_down(), ctx(&mut scenario));
             
             // Debug: Check final state
             let board_after = game::get_board(&userGame);
-            std::debug::print(&string::utf8(b"After move:"));
-            std::debug::print(board_after);
+            // std::debug::print(&string::utf8(b"After move:"));
+            // std::debug::print(board_after);
             
             // Debug: Check all positions in column 0
             let mut i = 0;
@@ -365,10 +365,10 @@ module TWENTY_PACKAGE::game_tests {
                 let pos = game::position(i, 0);
                 if (table::contains(board_after, pos)) {
                     let tile = table::borrow(board_after, pos);
-                    std::debug::print(&string::utf8(b"Position "));
-                    std::debug::print(&i);
-                    std::debug::print(&string::utf8(b" has value "));
-                    std::debug::print(&game::get_tile_value(tile));
+                    // std::debug::print(&string::utf8(b"Position "));
+                    // std::debug::print(&i);
+                    // std::debug::print(&string::utf8(b" has value "));
+                    // std::debug::print(&game::get_tile_value(tile));
                 };
                 i = i + 1;
             };
@@ -411,16 +411,16 @@ module TWENTY_PACKAGE::game_tests {
             
             // Debug: Check initial state
             let board_before = game::get_board(&userGame);
-            std::debug::print(&string::utf8(b"Before move:"));
-            std::debug::print(board_before);
+            // std::debug::print(&string::utf8(b"Before move:"));
+            // std::debug::print(board_before);
             
             // Execute up move
             game::execute_move(&mut userGame, game::direction_right(), ctx(&mut scenario));
             
             // Debug: Check final state
             let board_after = game::get_board(&userGame);
-            std::debug::print(&string::utf8(b"After move:"));
-            std::debug::print(board_after);
+            // std::debug::print(&string::utf8(b"After move:"));
+            // std::debug::print(board_after);
             
             // Debug: Check all positions in column 0
             let mut i = 0;
@@ -428,10 +428,10 @@ module TWENTY_PACKAGE::game_tests {
                 let pos = game::position(i, 0);
                 if (table::contains(board_after, pos)) {
                     let tile = table::borrow(board_after, pos);
-                    std::debug::print(&string::utf8(b"Position "));
-                    std::debug::print(&i);
-                    std::debug::print(&string::utf8(b" has value "));
-                    std::debug::print(&game::get_tile_value(tile));
+                    // std::debug::print(&string::utf8(b"Position "));
+                    // std::debug::print(&i);
+                    // std::debug::print(&string::utf8(b" has value "));
+                    // std::debug::print(&game::get_tile_value(tile));
                 };
                 i = i + 1;
             };
@@ -477,16 +477,16 @@ module TWENTY_PACKAGE::game_tests {
             
             // Debug: Check initial state
             let board_before = game::get_board(&userGame);
-            std::debug::print(&string::utf8(b"Before move:"));
-            std::debug::print(board_before);
+            // std::debug::print(&string::utf8(b"Before move:"));
+            // std::debug::print(board_before);
             
             // Execute up move
             game::execute_move(&mut userGame, game::direction_right(), ctx(&mut scenario));
             
             // Debug: Check final state
             let board_after = game::get_board(&userGame);
-            std::debug::print(&string::utf8(b"After move:"));
-            std::debug::print(board_after);
+            // std::debug::print(&string::utf8(b"After move:"));
+            // std::debug::print(board_after);
             
             // Debug: Check all positions in column 0
             let mut i = 0;
@@ -494,10 +494,10 @@ module TWENTY_PACKAGE::game_tests {
                 let pos = game::position(i, 0);
                 if (table::contains(board_after, pos)) {
                     let tile = table::borrow(board_after, pos);
-                    std::debug::print(&string::utf8(b"Position "));
-                    std::debug::print(&i);
-                    std::debug::print(&string::utf8(b" has value "));
-                    std::debug::print(&game::get_tile_value(tile));
+                    // std::debug::print(&string::utf8(b"Position "));
+                    // std::debug::print(&i);
+                    // std::debug::print(&string::utf8(b" has value "));
+                    // std::debug::print(&game::get_tile_value(tile));
                 };
                 i = i + 1;
             };
@@ -544,16 +544,16 @@ module TWENTY_PACKAGE::game_tests {
             
             // Debug: Check initial state
             let board_before = game::get_board(&userGame);
-            std::debug::print(&string::utf8(b"Before move:"));
-            std::debug::print(board_before);
+            // std::debug::print(&string::utf8(b"Before move:"));
+            // std::debug::print(board_before);
             
             // Execute up move
             game::execute_move(&mut userGame, game::direction_left(), ctx(&mut scenario));
             
             // Debug: Check final state
             let board_after = game::get_board(&userGame);
-            std::debug::print(&string::utf8(b"After move:"));
-            std::debug::print(board_after);
+            // std::debug::print(&string::utf8(b"After move:"));
+            // std::debug::print(board_after);
             
             // Debug: Check all positions in column 0
             let mut i = 0;
@@ -561,10 +561,10 @@ module TWENTY_PACKAGE::game_tests {
                 let pos = game::position(i, 0);
                 if (table::contains(board_after, pos)) {
                     let tile = table::borrow(board_after, pos);
-                    std::debug::print(&string::utf8(b"Position "));
-                    std::debug::print(&i);
-                    std::debug::print(&string::utf8(b" has value "));
-                    std::debug::print(&game::get_tile_value(tile));
+                    // std::debug::print(&string::utf8(b"Position "));
+                    // std::debug::print(&i);
+                    // std::debug::print(&string::utf8(b" has value "));
+                    // std::debug::print(&game::get_tile_value(tile));
                 };
                 i = i + 1;
             };
@@ -607,16 +607,16 @@ module TWENTY_PACKAGE::game_tests {
             
             // Debug: Check initial state
             let board_before = game::get_board(&userGame);
-            std::debug::print(&string::utf8(b"Before move:"));
-            std::debug::print(board_before);
+            // std::debug::print(&string::utf8(b"Before move:"));
+            // std::debug::print(board_before);
             
             // Execute up move
             game::execute_move(&mut userGame, game::direction_left(), ctx(&mut scenario));
             
             // Debug: Check final state
             let board_after = game::get_board(&userGame);
-            std::debug::print(&string::utf8(b"After move:"));
-            std::debug::print(board_after);
+            // std::debug::print(&string::utf8(b"After move:"));
+            // std::debug::print(board_after);
             
             // Debug: Check all positions in column 0
             let mut i = 0;
@@ -624,10 +624,10 @@ module TWENTY_PACKAGE::game_tests {
                 let pos = game::position(i, 0);
                 if (table::contains(board_after, pos)) {
                     let tile = table::borrow(board_after, pos);
-                    std::debug::print(&string::utf8(b"Position "));
-                    std::debug::print(&i);
-                    std::debug::print(&string::utf8(b" has value "));
-                    std::debug::print(&game::get_tile_value(tile));
+                    // std::debug::print(&string::utf8(b"Position "));
+                    // std::debug::print(&i);
+                    // std::debug::print(&string::utf8(b" has value "));
+                    // std::debug::print(&game::get_tile_value(tile));
                 };
                 i = i + 1;
             };
@@ -672,16 +672,16 @@ module TWENTY_PACKAGE::game_tests {
             
             // Debug: Check initial state
             let board_before = game::get_board(&userGame);
-            std::debug::print(&string::utf8(b"Before move:"));
-            std::debug::print(board_before);
+            // std::debug::print(&string::utf8(b"Before move:"));
+            // std::debug::print(board_before);
             
             // Execute up move
             game::execute_move(&mut userGame, game::direction_up(), ctx(&mut scenario));
             
             // Debug: Check final state
             let board_after = game::get_board(&userGame);
-            std::debug::print(&string::utf8(b"After move:"));
-            std::debug::print(board_after);
+            // std::debug::print(&string::utf8(b"After move:"));
+            // std::debug::print(board_after);
             
             // Debug: Check all positions in column 0
             let mut i = 0;
@@ -689,10 +689,10 @@ module TWENTY_PACKAGE::game_tests {
                 let pos = game::position(i, 0);
                 if (table::contains(board_after, pos)) {
                     let tile = table::borrow(board_after, pos);
-                    std::debug::print(&string::utf8(b"Position "));
-                    std::debug::print(&i);
-                    std::debug::print(&string::utf8(b" has value "));
-                    std::debug::print(&game::get_tile_value(tile));
+                    // std::debug::print(&string::utf8(b"Position "));
+                    // std::debug::print(&i);
+                    // std::debug::print(&string::utf8(b" has value "));
+                    // std::debug::print(&game::get_tile_value(tile));
                 };
                 i = i + 1;
             };
@@ -899,21 +899,21 @@ module TWENTY_PACKAGE::game_tests {
         add_tile_at_position(&mut userGame, 4, 0, 4, 0, ctx(&mut scenario));
         
         // Debug: Check initial state before move
-        std::debug::print(&string::utf8(b"=== BEFORE MOVE ==="));
+        // std::debug::print(&string::utf8(b"=== BEFORE MOVE ==="));
         let board_before = game::get_board(&userGame);
         let mut i = 0;
         while (i < 5) {
             let pos = game::position(i, 0);
             if (table::contains(board_before, pos)) {
                 let tile = table::borrow(board_before, pos);
-                std::debug::print(&string::utf8(b"Initial Position ("));
-                std::debug::print(&i);
-                std::debug::print(&string::utf8(b", 0) has value "));
-                std::debug::print(&game::get_tile_value(tile));
+                // std::debug::print(&string::utf8(b"Initial Position ("));
+                // std::debug::print(&i);
+                // std::debug::print(&string::utf8(b", 0) has value "));
+                // std::debug::print(&game::get_tile_value(tile));
             } else {
-                std::debug::print(&string::utf8(b"Initial Position ("));
-                std::debug::print(&i);
-                std::debug::print(&string::utf8(b", 0) is EMPTY"));
+                // std::debug::print(&string::utf8(b"Initial Position ("));
+                // std::debug::print(&i);
+                // std::debug::print(&string::utf8(b", 0) is EMPTY"));
             };
             i = i + 1;
         };
@@ -924,22 +924,22 @@ module TWENTY_PACKAGE::game_tests {
         let board = game::get_board(&userGame);
         
         // Debug: Check all positions in column 0 after move
-        std::debug::print(&string::utf8(b"=== AFTER MOVE ==="));
+        // std::debug::print(&string::utf8(b"=== AFTER MOVE ==="));
         let mut i = 0;
         while (i < 5) {
             let pos = game::position(i, 0);
             if (table::contains(board, pos)) {
                 let tile = table::borrow(board, pos);
-                std::debug::print(&string::utf8(b"Final Position ("));
-                std::debug::print(&i);
-                std::debug::print(&string::utf8(b", 0) has value "));
-                std::debug::print(&game::get_tile_value(tile));
-                std::debug::print(&string::utf8(b" type "));
-                std::debug::print(&game::get_tile_type(tile));
+                // std::debug::print(&string::utf8(b"Final Position ("));
+                // std::debug::print(&i);
+                // std::debug::print(&string::utf8(b", 0) has value "));
+                // std::debug::print(&game::get_tile_value(tile));
+                // std::debug::print(&string::utf8(b" type "));
+                // std::debug::print(&game::get_tile_type(tile));
             } else {
-                std::debug::print(&string::utf8(b"Final Position ("));
-                std::debug::print(&i);
-                std::debug::print(&string::utf8(b", 0) is EMPTY"));
+                // std::debug::print(&string::utf8(b"Final Position ("));
+                // std::debug::print(&i);
+                // std::debug::print(&string::utf8(b", 0) is EMPTY"));
             };
             i = i + 1;
         };
@@ -999,7 +999,7 @@ module TWENTY_PACKAGE::game_tests {
             i = i + 1;
         };
         
-        std::debug::print(&string::utf8(b"=== TEST PASSED: No index issues detected ==="));
+        // std::debug::print(&string::utf8(b"=== TEST PASSED: No index issues detected ==="));
         
         test::return_to_sender(&scenario, userGame);
     };
@@ -1205,7 +1205,7 @@ module TWENTY_PACKAGE::game_tests {
             add_tile_at_position(&mut userGame, 1, 1, 16, 0, ctx(&mut scenario));
             
             // Debug: Check board state before move
-            std::debug::print(&string::utf8(b"Before move:\n"));
+            // std::debug::print(&string::utf8(b"Before move:\n"));
             let mut i = 0;
             while (i < 5) {
                 let mut j = 0;
@@ -1213,15 +1213,15 @@ module TWENTY_PACKAGE::game_tests {
                     let pos = game::position(i, j);
                     if (table::contains(game::get_board(&userGame), pos)) {
                         let tile = table::borrow(game::get_board(&userGame), pos);
-                        std::debug::print(&string::utf8(b"Position ("));
-                        std::debug::print(&i);
-                        std::debug::print(&string::utf8(b", "));
-                        std::debug::print(&j);
-                        std::debug::print(&string::utf8(b") has value "));
-                        std::debug::print(&game::get_tile_value(tile));
-                        std::debug::print(&string::utf8(b" type "));
-                        std::debug::print(&game::get_tile_type(tile));
-                        std::debug::print(&string::utf8(b"\n"));
+                        // std::debug::print(&string::utf8(b"Position ("));
+                        // std::debug::print(&i);
+                        // std::debug::print(&string::utf8(b", "));
+                        // std::debug::print(&j);
+                        // std::debug::print(&string::utf8(b") has value "));
+                        // std::debug::print(&game::get_tile_value(tile));
+                        // std::debug::print(&string::utf8(b" type "));
+                        // std::debug::print(&game::get_tile_type(tile));
+                        // std::debug::print(&string::utf8(b"\n"));
                     };
                     j = j + 1;
                 };
@@ -1241,7 +1241,7 @@ module TWENTY_PACKAGE::game_tests {
             assert!(!table::contains(board, game::position(1, 1)), 4); // Adjacent tile
             
             // Debug: Check all positions to see what's left after explosion
-            std::debug::print(&string::utf8(b"After move:\n"));
+            // std::debug::print(&string::utf8(b"After move:\n"));
             let mut i = 0;
             while (i < 5) {
                 let mut j = 0;
@@ -1249,15 +1249,15 @@ module TWENTY_PACKAGE::game_tests {
                     let pos = game::position(i, j);
                     if (table::contains(board, pos)) {
                         let tile = table::borrow(board, pos);
-                        std::debug::print(&string::utf8(b"Position ("));
-                        std::debug::print(&i);
-                        std::debug::print(&string::utf8(b", "));
-                        std::debug::print(&j);
-                        std::debug::print(&string::utf8(b") has value "));
-                        std::debug::print(&game::get_tile_value(tile));
-                        std::debug::print(&string::utf8(b" type "));
-                        std::debug::print(&game::get_tile_type(tile));
-                        std::debug::print(&string::utf8(b"\n"));
+                        // std::debug::print(&string::utf8(b"Position ("));
+                        // std::debug::print(&i);
+                        // std::debug::print(&string::utf8(b", "));
+                        // std::debug::print(&j);
+                        // std::debug::print(&string::utf8(b") has value "));
+                        // std::debug::print(&game::get_tile_value(tile));
+                        // std::debug::print(&string::utf8(b" type "));
+                        // std::debug::print(&game::get_tile_type(tile));
+                        // std::debug::print(&string::utf8(b"\n"));
                     };
                     j = j + 1;
                 };
@@ -1265,14 +1265,14 @@ module TWENTY_PACKAGE::game_tests {
             };
             
             // Debug: Check if explosion happened at (0,0)
-            std::debug::print(&string::utf8(b"Explosion should have happened at (0,0)\n"));
+            // std::debug::print(&string::utf8(b"Explosion should have happened at (0,0)\n"));
             
             // The tile at (0,2) should remain as it's not in explosion range
             // But it seems to be cleared, let's check what actually happened
             if (table::contains(board, game::position(0, 2))) {
-                std::debug::print(&string::utf8(b"Position (0,2) still has a tile\n"));
+                // std::debug::print(&string::utf8(b"Position (0,2) still has a tile\n"));
             } else {
-                std::debug::print(&string::utf8(b"Position (0,2) was cleared by explosion\n"));
+                // std::debug::print(&string::utf8(b"Position (0,2) was cleared by explosion\n"));
             };
             
             // For now, let's just check that the explosion cleared the expected positions
@@ -1444,8 +1444,8 @@ module TWENTY_PACKAGE::game_tests {
             add_tile_at_position(&mut userGame, 1, 2, 1, 2, ctx(&mut scenario)); // Heart tile in explosion range
             
             // Debug: Check initial state
-            std::debug::print(&string::utf8(b"Initial game over status: "));
-            std::debug::print(&game::is_game_over(&userGame));
+            // std::debug::print(&string::utf8(b"Initial game over status: "));
+            // std::debug::print(&game::is_game_over(&userGame));
             assert!(!game::is_game_over(&userGame), 0); // Game should not be over initially
             
             // Execute right move to trigger bomb explosion
@@ -1453,18 +1453,18 @@ module TWENTY_PACKAGE::game_tests {
             
             // Debug: Check final state - the game should be over after heart destruction
             // The heart tile at (0,2) should be destroyed by the bomb explosion from (0,1)
-            std::debug::print(&string::utf8(b"Game over status: "));
-            std::debug::print(&game::is_game_over(&userGame));
+            // std::debug::print(&string::utf8(b"Game over status: "));
+            // std::debug::print(&game::is_game_over(&userGame));
             
             // Debug: Check if heart tile still exists
             let board = game::get_board(&userGame);
             let heart_pos = game::position(1, 2);
             let heart_exists = table::contains(board, heart_pos);
-            std::debug::print(&string::utf8(b"Heart tile exists: "));
-            std::debug::print(&heart_exists);
+            // std::debug::print(&string::utf8(b"Heart tile exists: "));
+            // std::debug::print(&heart_exists);
             
             // Debug: Check all positions to see what's left
-            std::debug::print(&string::utf8(b"Board state after move:"));
+            // std::debug::print(&string::utf8(b"Board state after move:"));
             let mut i = 0;
             while (i < 5) {
                 let mut j = 0;
@@ -1472,15 +1472,15 @@ module TWENTY_PACKAGE::game_tests {
                     let pos = game::position(i, j);
                     if (table::contains(board, pos)) {
                         let tile = table::borrow(board, pos);
-                        std::debug::print(&string::utf8(b"Position ("));
-                        std::debug::print(&i);
-                        std::debug::print(&string::utf8(b", "));
-                        std::debug::print(&j);
-                        std::debug::print(&string::utf8(b") has value "));
-                        std::debug::print(&game::get_tile_value(tile));
-                        std::debug::print(&string::utf8(b" type "));
-                        std::debug::print(&game::get_tile_type(tile));
-                        std::debug::print(&string::utf8(b"\n"));
+                        // std::debug::print(&string::utf8(b"Position ("));
+                        // std::debug::print(&i);
+                        // std::debug::print(&string::utf8(b", "));
+                        // std::debug::print(&j);
+                        // std::debug::print(&string::utf8(b") has value "));
+                        // std::debug::print(&game::get_tile_value(tile));
+                        // std::debug::print(&string::utf8(b" type "));
+                        // std::debug::print(&game::get_tile_type(tile));
+                        // std::debug::print(&string::utf8(b"\n"));
                     };
                     j = j + 1;
                 };
