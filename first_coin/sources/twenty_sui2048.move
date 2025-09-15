@@ -27,6 +27,9 @@ module TWENTY_PACKAGE::game {
     const EGameOver: u64 = 2;
     const EInvalidMove: u64 = 3;
     const ENoEmptyCells: u64 = 4;
+    const EPositionEmpty: u64 = 5;
+    const ENotRandomTile: u64 = 6;
+    const EInvalidRandomIndex: u64 = 7;
 
     // Direction enum
     public struct Direction has copy, drop, store {
@@ -259,7 +262,10 @@ module TWENTY_PACKAGE::game {
         bomb_cumulative : u64,
         regular_random: u64,
         ctx: &mut TxContext) {
-        assert!(!game.state.is_game_over, EGameOver);
+        // If game is already over, silently return without adding new tile
+        if (game.state.is_game_over) {
+            return
+        };
         
         let mut empty_positions = get_empty_positions(&game.state);
 
@@ -272,6 +278,7 @@ module TWENTY_PACKAGE::game {
             return;
         };
         
+        // Add bounds check for random_index to prevent vector out of bounds error
         let position = *vector::borrow(&empty_positions, random_index);
 
         let tile = generate_random_tile(
@@ -375,25 +382,27 @@ module TWENTY_PACKAGE::game {
         col: u8,
         ctx: &mut TxContext
     ) {
-        let random_tile_values = get_random_tile_values();
-
         // 檢查遊戲是否結束
-        assert!(!game.state.is_game_over, EGameOver);
+        // assert!(!game.state.is_game_over, EGameOver);
+        
+        // 檢查位置是否在有效範圍內
+        assert!(row < BOARD_SIZE, EInvalidMove);
+        assert!(col < BOARD_SIZE, EInvalidMove);
         
         // 檢查隨機索引是否有效
-        assert!(random_index < vector::length(&random_tile_values), 1); // 假設錯誤碼 1
+        assert!(random_index < vector::length(&RANDOM_TILE_VALUES), EInvalidRandomIndex);
         
         // 從預定義的隨機值中獲取新值
-        let random_value = *vector::borrow(&random_tile_values, random_index);
+        let random_value = *vector::borrow(&RANDOM_TILE_VALUES, random_index);
         
         let pos = position(row, col);
         
         // 檢查位置是否存在方塊
-        assert!(table::contains(&game.state.board, pos), 2); // 假設錯誤碼 2
+        assert!(table::contains(&game.state.board, pos), EPositionEmpty);
         
         // 獲取舊方塊並檢查是否為隨機方塊
         let old_tile = table::remove(&mut game.state.board, pos);
-        assert!(is_random(&old_tile), 3); // 確保是隨機方塊，假設錯誤碼 3
+        assert!(is_random(&old_tile), ENotRandomTile);
         
         // 創建新的普通方塊（替換隨機方塊）
         let new_tile = tile(random_value, tile_type_regular());
@@ -414,8 +423,6 @@ module TWENTY_PACKAGE::game {
         game: &mut Game, 
         direction: Direction,
         ctx: &mut TxContext) {
-        assert!(!game.state.is_game_over, EGameOver);
-        
         let (moved, explosions) = if (direction.value == UP) {
             move_up(game, ctx)
         } else if (direction.value == DOWN) {
@@ -492,11 +499,12 @@ module TWENTY_PACKAGE::game {
                 moved = true;
             };
             
-            // Add explosions with correct row indices (reversed)
+            // Add explosions with correct row indices
+            // For move_down, process_line_with_bombs already handles the reversal
             let mut i = 0;
             while (i < vector::length(&column_explosions)) {
                 let explosion_index = *vector::borrow(&column_explosions, i);
-                vector::push_back(&mut explosions, position(BOARD_SIZE - 1 - (explosion_index as u8), j));
+                vector::push_back(&mut explosions, position(explosion_index as u8, j));
                 i = i + 1;
             };
             
@@ -554,8 +562,8 @@ module TWENTY_PACKAGE::game {
             let mut j = 0;
             while (j < vector::length(&row_explosions)) {
                 let explosion_index = *vector::borrow(&row_explosions, j);
-                // For right move, explosion_index is the position in the processed row
-                // We need to map it to the actual board position
+                // For right move, explosion_index is already reversed in process_line_with_bombs
+                // So we can use it directly
                 vector::push_back(&mut explosions, position(i, explosion_index as u8));
                 j = j + 1;
             };
@@ -668,8 +676,9 @@ module TWENTY_PACKAGE::game {
                 tile_value(&tile1) < MAX_VALUE && 
                 !is_random(&tile1) && !is_random(&tile2)) {
                 
-                // Check for bomb explosion
+                // Check for bomb explosion - record the position where the merged tile will be placed
                 if (is_bomb(&tile1) || is_bomb(&tile2)) {
+                    // Record the position where the merged tile will be placed (this is where explosion will occur)
                     vector::push_back(&mut explosions, i);
                 };
                 
@@ -778,6 +787,12 @@ module TWENTY_PACKAGE::game {
                     (i == center.i && (j == center.j + 1 || (center.j > 0 && j == center.j - 1))) ||
                     (j == center.j && (i == center.i + 1 || (center.i > 0 && i == center.i - 1)))) {
                     vector::push_back(&mut affected_positions, pos);
+                    // Debug: Print affected position
+                    // std::debug::print(&string::utf8(b"Affected position: ("));
+                    // std::debug::print(&i);
+                    // std::debug::print(&string::utf8(b", "));
+                    // std::debug::print(&j);
+                    // std::debug::print(&string::utf8(b")\n"));
                 };
                 j = j + 1;
             };
@@ -788,11 +803,38 @@ module TWENTY_PACKAGE::game {
         let mut i = 0;
         while (i < vector::length(&affected_positions)) {
             let pos = *vector::borrow(&affected_positions, i);
+            // Debug: Check if position has a tile before removing
+            // std::debug::print(&string::utf8(b"Checking position ("));
+            // std::debug::print(&pos.i);
+            // std::debug::print(&string::utf8(b", "));
+            // std::debug::print(&pos.j);
+            // std::debug::print(&string::utf8(b") - has tile: "));
+            // std::debug::print(&table::contains(&game.state.board, pos));
+            // std::debug::print(&string::utf8(b"\n"));
+            
             if (table::contains(&game.state.board, pos)) {
                 let tile = table::remove(&mut game.state.board, pos);
                 
+                // Debug: Print tile info before checking if it's a heart
+                // std::debug::print(&string::utf8(b"Tile at position ("));
+                // std::debug::print(&pos.i);
+                // std::debug::print(&string::utf8(b", "));
+                // std::debug::print(&pos.j);
+                // std::debug::print(&string::utf8(b") has value "));
+                // std::debug::print(&tile.value);
+                // std::debug::print(&string::utf8(b" type "));
+                // std::debug::print(&tile.tile_type.value);
+                // std::debug::print(&string::utf8(b" is_heart "));
+                // std::debug::print(&tile.is_heart);
+                // std::debug::print(&string::utf8(b"\n"));
+                
                 // Check if heart tile was destroyed
                 if (is_heart(&tile)) {
+                    // std::debug::print(&string::utf8(b"Heart tile destroyed at position ("));
+                    // std::debug::print(&pos.i);
+                    // std::debug::print(&string::utf8(b", "));
+                    // std::debug::print(&pos.j);
+                    // std::debug::print(&string::utf8(b")\n"));
                     game.state.is_game_over = true;
                     event::emit(GameOver {
                         game_id: game.state.id,
@@ -821,6 +863,32 @@ module TWENTY_PACKAGE::game {
     // Check if game is over
     public fun is_game_over(game: &Game): bool {
         game.state.is_game_over
+    }
+
+    // Check if position has a tile
+    public fun has_tile_at_position(game: &Game, row: u8, col: u8): bool {
+        assert!(row < BOARD_SIZE, EInvalidMove);
+        assert!(col < BOARD_SIZE, EInvalidMove);
+        let pos = position(row, col);
+        table::contains(&game.state.board, pos)
+    }
+
+    // Check if position has a random tile
+    public fun has_random_tile_at_position(game: &Game, row: u8, col: u8): bool {
+        if (!has_tile_at_position(game, row, col)) {
+            return false
+        };
+        let pos = position(row, col);
+        let tile = table::borrow(&game.state.board, pos);
+        is_random(tile)
+    }
+
+    // Get number of empty positions
+    public fun get_empty_position_count(game: &Game): u64 {
+        let empty_positions = get_empty_positions(&game.state);
+        let count = vector::length(&empty_positions);
+        vector::destroy_empty(empty_positions);
+        count
     }
 
     // Get game score

@@ -20,7 +20,7 @@ USDC = 0x637643192ee7f74640702b4deaf5c18ede94ad7157ea5e0414544a8505ee3c3d
 ObjectType 要先存。
 
 **Successfully**
-sui client call --package 0xf001416442c35c99ce1665ad2b5141ccd4eaaea191ff522932bba578e44dce8c --module twenty --function mint_usdc_in_vault --args 0xdb6c6f4741ec17a8318574d93dd5ca9aa1a0f135f6c25c9d11418544536b5cd9 0xbf1ecffe4d404a53eebdc396ae48f7361b7e362d6f42ddf04eb0c4fa370c7038 --gas-budget 10000000
+sui client call --package 0xb2f4f2ee87295246e66216a1d5786000100860672d927e5576b2e2942883c6d6 --module twenty --function mint_usdc_in_vault --args 0x7ec0ec918e9026650743a4a7019665edc946fd210c2470caeed04ecc1ad862ec 0x8a1489dee662e9d1b9dcf58676acc1e4eb7aacad80658ff59ade89303ba86648 --gas-budget 10000000
 
 
 ## CURL

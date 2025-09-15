@@ -99,7 +99,7 @@ public entry fun swap_twenty_to_usdc(
     };
     
     // 計算可換取的 USDC 數量
-    let usdc_value = twenty_amount / 10000;
+    let usdc_value = twenty_amount;
 
     coin::join(&mut vault.twenty_balance,  twenty_to_burn);
 
